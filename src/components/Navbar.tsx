@@ -47,7 +47,7 @@ const Navbar = ({
             {customer!.name} - {customer?.homeroom} - Vé {customer?.ticketType}
           </CardTitle>
           <CardDescription className="text-[10px]">
-            {session.user.email}
+            {session.user.email} - {customer.studentId}
           </CardDescription>
         </div>
       </div>

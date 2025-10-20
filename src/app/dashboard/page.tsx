@@ -8,8 +8,14 @@ import {
 import RedirectMessage from "@/components/RedirectMessage";
 import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
-import { retryAuth } from "@/dal/retry";
+import { retryAuth, retryDatabase } from "@/dal/retry";
 import Navbar from "@/components/Navbar";
+import { queueSpot } from "@/drizzle/schema";
+import { eq } from "drizzle-orm";
+import { db } from "@/drizzle/db";
+import Image from "next/image";
+import QR from "@/components/QR";
+import { cn } from "@/lib/utils";
 
 export default async function DashboardPage() {
   let session;
@@ -77,9 +83,66 @@ export default async function DashboardPage() {
     });
   }, "Revoke other customer sessions");
 
+  const customerQueueSpot = await retryDatabase(
+    () =>
+      db.query.queueSpot.findFirst({
+        where: eq(queueSpot.customerId, session.customer.studentId),
+        with: {
+          queue: true,
+        },
+      }),
+    "fetch customer queue spot"
+  );
+  const ticketIncludeHauntedHouse = !!customerQueueSpot?.spotNumber;
+
   return (
-    <div className="relative flex items-center min-h-[calc(100vh-40px)] justify-start w-full bg-[url('/assets/bg.png')] overflow-hidden bg-contain p-4 flex-col">
+    <div className="relative  flex items-center min-h-[calc(100vh-40px)] justify-start w-full bg-[url('/assets/bg.png')] overflow-hidden bg-cover p-4 flex-col">
       <Navbar session={session.session} customer={session.customer} />
+      <div className="max-w-[90%]  font-italianno relative mt-4">
+        <div className=" absolute top-[46%] left-1/2 -translate-x-1/2 -translate-y-[40%] flex items-center justify-center flex-col min-w-[250px] w-[70%]">
+          {ticketIncludeHauntedHouse && (
+            <div className="flex flex-col gap-2 mb-2 text-2xl -mt-10 text-center">
+              <p className="text-[#FFD700]">
+                Nhà ma: {customerQueueSpot?.queue?.hauntedHouseName}
+              </p>
+              <p className="text-[#FFD700]">
+                Lượt: {customerQueueSpot?.queue?.queueNumber} (Từ{" "}
+                {customerQueueSpot?.queue?.queueStartTime.toLocaleTimeString(
+                  [],
+                  {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  }
+                )}{" "}
+                đến{" "}
+                {customerQueueSpot?.queue?.queueEndTime.toLocaleTimeString([], {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })}
+                )
+              </p>
+            </div>
+          )}
+          <h1
+            className={cn(
+              "text-[#FFD700] login_title text-[33px] font-semibold text-center  ",
+              !ticketIncludeHauntedHouse && "mb-2 -mt-10"
+            )}
+          >
+            Đưa mã QR này cho staff
+          </h1>
+          <QR url={session.session.session.id} />
+        </div>
+        <Image
+          src="/assets/frame.png"
+          alt="Frame"
+          width={540}
+          height={675}
+          className="max-h-[90vh] h-auto w-auto"
+        />
+      </div>
     </div>
   );
 }
