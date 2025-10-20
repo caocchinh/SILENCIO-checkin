@@ -17,7 +17,7 @@ export const ERROR_CODES = {
   INVALID_INPUT: "invalid-input",
   // Resource errors
   NOT_FOUND: "not-found",
-  SESSION_EXPIRED: "session-expired",
+  CUSTOMER_SESSION_EXPIRED: "customer-session-expired",
   ALREADY_EXISTS: "already-exists",
 } as const;
 
@@ -38,7 +38,8 @@ export const ERROR_MESSAGES = {
     "Loại vé bạn mua không được chơi nhà ma.",
   [ERROR_CODES.INVALID_INPUT]: "Dữ liệu đầu vào không hợp lệ",
   [ERROR_CODES.NOT_FOUND]: "Không tìm thấy tài nguyên",
-  [ERROR_CODES.SESSION_EXPIRED]: "Phiên đăng nhập đã hết hạn",
+  [ERROR_CODES.CUSTOMER_SESSION_EXPIRED]:
+    "Phiên đăng nhập của khách hàng đã hết hạn",
   [ERROR_CODES.ALREADY_EXISTS]: "Tài nguyên đã tồn tại",
 } as const;
 

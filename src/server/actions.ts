@@ -42,6 +42,14 @@ export async function getCustomerInfoBySession({
       return createActionError("INVALID_INPUT", "Session ID is required");
     }
 
+    // Validate session ID length (should be 32 characters)
+    if (sessionId.length !== 32) {
+      return createActionError(
+        "INVALID_INPUT",
+        "Session ID must be 32 characters long"
+      );
+    }
+
     // Get session from database
     const sessionRecord = await retryDatabase(
       () =>
@@ -52,12 +60,15 @@ export async function getCustomerInfoBySession({
     );
 
     if (!sessionRecord) {
-      return createActionError("NOT_FOUND", "Session not found");
+      return createActionError("CUSTOMER_SESSION_EXPIRED", "Session not found");
     }
 
     // Check if session has expired
     if (sessionRecord.expiresAt < new Date()) {
-      return createActionError("NOT_FOUND", "Session has expired");
+      return createActionError(
+        "CUSTOMER_SESSION_EXPIRED",
+        "Session has expired"
+      );
     }
 
     // Get user from session
