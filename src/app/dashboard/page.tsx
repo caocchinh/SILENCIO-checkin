@@ -96,7 +96,7 @@ export default async function DashboardPage() {
   const ticketIncludeHauntedHouse = !!customerQueueSpot?.spotNumber;
 
   return (
-    <div className="relative  flex items-center min-h-[calc(100vh-40px)] justify-start w-full bg-[url('/assets/bg.png')] overflow-hidden bg-cover p-4 flex-col">
+    <div className="relative flex items-center min-h-[calc(100vh-40px)] justify-start w-full bg-[url('/assets/bg.png')] overflow-hidden bg-cover p-4 flex-col">
       <Navbar session={session.session} customer={session.customer} />
       <div className="max-w-[90%]  font-italianno relative mt-4">
         <div className=" absolute top-[46%] left-1/2 -translate-x-1/2 -translate-y-[40%] flex items-center justify-center flex-col min-w-[250px] w-[70%]">

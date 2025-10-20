@@ -2,7 +2,7 @@ import { ErrorCard } from "@/components/ErrorCard";
 import { verifySession } from "@/dal/verifySession";
 import { ERROR_CODES, getErrorMessage } from "@/constants/errors";
 import RedirectMessage from "@/components/RedirectMessage";
-import { LogoutButton } from "@/components/LogoutButton";
+import AdminIndex from "./Index";
 
 export default async function AdminPage() {
   let session;
@@ -38,6 +38,5 @@ export default async function AdminPage() {
     );
   }
 
-  // Redirect customers to queue interface
-  return <LogoutButton />;
+  return <AdminIndex />;
 }

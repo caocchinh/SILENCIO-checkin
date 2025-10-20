@@ -12,13 +12,13 @@ export default function QR({ url }: { url: string }) {
       marginSize={2}
       bgColor={"#ffffff"}
       fgColor={"#000000"}
-      level={"Q"}
+      level={"H"}
       imageSettings={{
-        src: "/assets/logo-bg-colorised-modified-small.webp",
+        src: "/assets/logo.webp",
         x: undefined,
         y: undefined,
-        height: 32,
-        width: 32,
+        height: 35,
+        width: 35,
         opacity: 1,
         excavate: true,
       }}

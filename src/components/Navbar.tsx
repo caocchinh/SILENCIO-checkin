@@ -11,7 +11,7 @@ const Navbar = ({
   className,
 }: {
   session: any;
-  customer: Customer;
+  customer?: Customer;
   className?: string;
 }) => {
   return (
@@ -42,14 +42,17 @@ const Navbar = ({
             </div>
           )}
         </div>
-        <div>
-          <CardTitle className="text-sm">
-            {customer!.name} - {customer?.homeroom} - Vé {customer?.ticketType}
-          </CardTitle>
-          <CardDescription className="text-[10px]">
-            {session.user.email} - {customer.studentId}
-          </CardDescription>
-        </div>
+        {customer && (
+          <div>
+            <CardTitle className="text-sm">
+              {customer!.name} - {customer?.homeroom} - Vé{" "}
+              {customer?.ticketType}
+            </CardTitle>
+            <CardDescription className="text-[10px]">
+              {session.user.email} - {customer.studentId}
+            </CardDescription>
+          </div>
+        )}
       </div>
       <div className="flex gap-3 items-center justify-center flex-wrap flex-col sm:flex-row w-full sm:w-max">
         <LogoutButton />
