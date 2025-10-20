@@ -18,10 +18,10 @@ interface CustomerInfo {
   homeroom: string;
   ticketType: string;
   hasCheckedIn: boolean;
-  hauntedHouseName: string;
-  queueNumber: number;
-  queueStartTime: Date;
-  queueEndTime: Date;
+  hauntedHouseName: string | null;
+  queueNumber: number | null;
+  queueStartTime: Date | null;
+  queueEndTime: Date | null;
 }
 
 export async function getCustomerInfoBySession({
@@ -114,10 +114,10 @@ export async function getCustomerInfoBySession({
       homeroom: customerRecord.homeroom,
       ticketType: customerRecord.ticketType,
       hasCheckedIn: customerRecord.hasCheckedIn,
-      hauntedHouseName: customerRecord.queueSpots[0].queue.hauntedHouseName,
-      queueNumber: customerRecord.queueSpots[0].queue.queueNumber,
-      queueStartTime: customerRecord.queueSpots[0].queue.queueStartTime,
-      queueEndTime: customerRecord.queueSpots[0].queue.queueEndTime,
+      hauntedHouseName: customerRecord.queueSpots[0]?.queue?.hauntedHouseName,
+      queueNumber: customerRecord.queueSpots[0]?.queue?.queueNumber,
+      queueStartTime: customerRecord.queueSpots[0]?.queue?.queueStartTime,
+      queueEndTime: customerRecord.queueSpots[0]?.queue?.queueEndTime,
     });
   } catch (error) {
     console.error("Error fetching customer info by session:", error);

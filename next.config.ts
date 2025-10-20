@@ -1,7 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  redirects() {
+    return Promise.resolve([
+      {
+        source: "/admin",
+        destination: "/admin/online",
+        permanent: true,
+      },
+    ]);
+  },
 };
 
 export default nextConfig;
