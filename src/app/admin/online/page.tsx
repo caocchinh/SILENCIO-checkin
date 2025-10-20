@@ -165,11 +165,11 @@ const AdminOnlinePage = () => {
   }, [scannerKey]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center w-full p-2 md:p-4">
+    <div className="min-h-screen flex items-center justify-center w-full  p-2 md:p-4">
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+      <div className="flex flex-row flex-wrap gap-6 w-full md:items-start items-center justify-center">
         {/* Scanner Section */}
-        <div className="bg-white h-max rounded-xl shadow-lg p-6 border border-slate-200">
+        <div className="bg-white h-max rounded-xl shadow-lg p-6 border border-slate-200 flex-1 w-full min-w-[90%] sm:min-w-[420px]  max-w-[550px]">
           <div className=" bg-white rounded-xl mb-3">
             <label className="flex items-center gap-2 text-xl font-semibold text-black  mb-3">
               <Camera />
@@ -183,7 +183,7 @@ const AdminOnlinePage = () => {
               }}
               value={selectedDevice}
             >
-              <SelectTrigger className="w-full border-slate-300 focus:ring-blue-500">
+              <SelectTrigger className="w-full border-slate-300 focus:ring-blue-500 cursor-pointer">
                 <SelectValue placeholder="Select a camera device" />
               </SelectTrigger>
               <SelectContent>
@@ -248,7 +248,7 @@ const AdminOnlinePage = () => {
 
         {/* Customer Information Section */}
         <div
-          className="bg-white rounded-xl shadow-lg p-6 border border-slate-200"
+          className="bg-white rounded-xl shadow-lg p-6 border border-slate-200 flex-1 w-full min-w-[90%] sm:min-w-[420px]  max-w-[550px] "
           ref={personalInfoRef}
         >
           <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -415,32 +415,34 @@ const AdminOnlinePage = () => {
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.25 }}
                     >
-                      <div className="flex items-start gap-3">
-                        <User className="w-5 h-5 text-slate-600 mt-0.5" />
-                        <div className="flex-1">
-                          <p className="text-xs text-slate-500 font-medium">
-                            Họ và tên
-                          </p>
-                          <p className="text-base font-semibold text-slate-900">
-                            {customerResponse.name}
-                          </p>
+                      <div className="flex items-center justify-center  flex-wrap ">
+                        {" "}
+                        <div className="flex items-start gap-3 flex-1 min-w-[150px]">
+                          <User className="w-5 h-5 text-slate-600 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-xs text-slate-500 font-medium">
+                              Họ và tên
+                            </p>
+                            <p className="text-base font-semibold text-slate-900 whitespace-pre-wrap wrap-anywhere max-w-[200px]">
+                              {customerResponse.name}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3 flex-1 min-w-[150px]">
+                          <Mail className="w-5 h-5 text-slate-600 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-xs text-slate-500 font-medium ">
+                              Email
+                            </p>
+                            <p className="text-base font-medium text-slate-900 whitespace-pre-wrap wrap-anywhere max-w-[200px]">
+                              {customerResponse.email}
+                            </p>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex items-start gap-3">
-                        <Mail className="w-5 h-5 text-slate-600 mt-0.5" />
-                        <div className="flex-1">
-                          <p className="text-xs text-slate-500 font-medium">
-                            Email
-                          </p>
-                          <p className="text-base font-medium text-slate-900">
-                            {customerResponse.email}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="flex items-start gap-2">
+                      <div className="flex items-center justify-center  flex-wrap">
+                        <div className="flex items-start gap-2 flex-1 min-w-[150px]">
                           <IdCardLanyard className="w-5 h-5 text-slate-600 mt-0.5" />
 
                           <div className="flex-1">
@@ -453,7 +455,7 @@ const AdminOnlinePage = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-start gap-2">
+                        <div className="flex items-start gap-2 flex-1 min-w-[150px]">
                           <Home className="w-5 h-5 text-slate-600 mt-0.5" />
                           <div className="flex-1">
                             <p className="text-xs text-slate-500 font-medium">

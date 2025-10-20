@@ -10,19 +10,7 @@ import {
 } from "@/constants/errors";
 import { retryDatabase } from "@/dal/retry";
 import { verifySession } from "@/dal/verifySession";
-
-interface CustomerInfo {
-  studentId: string;
-  name: string;
-  email: string;
-  homeroom: string;
-  ticketType: string;
-  hasCheckedIn: boolean;
-  hauntedHouseName: string | null;
-  queueNumber: number | null;
-  queueStartTime: Date | null;
-  queueEndTime: Date | null;
-}
+import { CustomerInfo } from "@/constants/types";
 
 export async function getCustomerInfoBySession({
   sessionId,
