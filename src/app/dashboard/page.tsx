@@ -140,7 +140,7 @@ export default async function DashboardPage() {
           alt="Frame"
           width={540}
           height={675}
-          className="max-h-[90vh] h-auto w-auto"
+          className="max-h-[90vh] h-auto w-auto rounded-md"
         />
       </div>
     </div>

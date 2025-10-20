@@ -2,8 +2,8 @@
 "use client";
 import { useDevices } from "@yudiel/react-qr-scanner";
 import { useState, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getCustomerInfoBySession } from "@/server/actions";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getCustomerInfoBySession, checkInUser } from "@/server/actions";
 import dynamic from "next/dynamic";
 import {
   Select,
@@ -24,11 +24,24 @@ import {
   QrCode,
   Users,
   IdCardLanyard,
+  UserRoundCheck,
+  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { getErrorMessage } from "@/constants/errors";
-import Image from "next/image";
+import { ERROR_CODES, getErrorMessage } from "@/constants/errors";
 import { TICKET_IMAGE } from "@/constants/constants";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { errorToast, successToast } from "@/lib/utils";
 
 const Scanner = dynamic(
   () => import("@yudiel/react-qr-scanner").then((mod) => mod.Scanner),
@@ -46,6 +59,11 @@ const AdminIndex = () => {
   const [scannerKey, setScannerKey] = useState<number>(0);
   const lastKeyUpdateRef = useRef<number>(0);
   const personalInfoRef = useRef<HTMLDivElement | null>(null);
+  const queryClient = useQueryClient();
+  const [isCheckInConfirmDialogOpen, setIsCheckInConfirmDialogOpen] =
+    useState(false);
+  const [isCustomerAlreadyCheckedInError, setIsCustomerAlreadyCheckedInError] =
+    useState(false);
 
   // Fetch customer info when scannedData changes
   const {
@@ -58,6 +76,8 @@ const AdminIndex = () => {
     queryFn: async () => {
       if (!scannedData) return null;
       personalInfoRef.current?.scrollIntoView({ behavior: "smooth" });
+      setIsCustomerAlreadyCheckedInError(false);
+      setIsCheckInConfirmDialogOpen(false);
       const response = await getCustomerInfoBySession({
         sessionId: scannedData,
       });
@@ -69,6 +89,58 @@ const AdminIndex = () => {
     },
     enabled: !!scannedData,
     retry: false,
+  });
+
+  // Mutation for checking in user
+  const checkInMutation = useMutation({
+    mutationFn: async (customerId: string) => {
+      const response = await checkInUser({ customerId });
+      if (response.success) {
+        return response.data;
+      } else {
+        throw new Error(response.code);
+      }
+    },
+    onSuccess: () => {
+      // Update the cached customer info with new check-in status
+      setIsCheckInConfirmDialogOpen(false);
+      queryClient.setQueryData(
+        ["customerInfo", scannedData + key],
+        (oldData: typeof customerResponse) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            hasCheckedIn: true,
+          };
+        }
+      );
+      successToast({
+        message: "Thành công",
+        description: "Khách hàng đã được check in thành công",
+      });
+    },
+    onError: (error) => {
+      if (error instanceof Error) {
+        if (error.message === ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN) {
+          setIsCustomerAlreadyCheckedInError(true);
+          setIsCheckInConfirmDialogOpen(false);
+          queryClient.setQueryData(
+            ["customerInfo", scannedData + key],
+            (oldData: typeof customerResponse) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                hasCheckedIn: true,
+              };
+            }
+          );
+        }
+        errorToast({
+          message: "Thất bại",
+          description: getErrorMessage(error.message ?? "unknown-error"),
+        });
+      }
+    },
   });
 
   // Load selected device from localStorage on mount
@@ -253,7 +325,9 @@ const AdminIndex = () => {
                     <motion.div
                       className={`p-4 rounded-lg border-2 ${
                         customerResponse.hasCheckedIn
-                          ? "bg-green-50 border-green-200"
+                          ? isCustomerAlreadyCheckedInError
+                            ? "bg-red-50 border-red-200"
+                            : "bg-green-50 border-green-200"
                           : "bg-amber-50 border-amber-200"
                       }`}
                       initial={{ scale: 0.9, opacity: 0 }}
@@ -266,7 +340,13 @@ const AdminIndex = () => {
                     >
                       <div className="flex items-center gap-2">
                         {customerResponse.hasCheckedIn ? (
-                          <CheckCircle2 className="w-6 h-6 text-green-600" />
+                          <CheckCircle2
+                            className={`w-6 h-6 ${
+                              isCustomerAlreadyCheckedInError
+                                ? "text-red-600"
+                                : "text-green-600"
+                            }`}
+                          />
                         ) : (
                           <Clock className="w-6 h-6 text-amber-600" />
                         )}
@@ -274,23 +354,31 @@ const AdminIndex = () => {
                           <p
                             className={`font-bold ${
                               customerResponse.hasCheckedIn
-                                ? "text-green-900"
+                                ? isCustomerAlreadyCheckedInError
+                                  ? "text-red-900"
+                                  : "text-green-900"
                                 : "text-amber-900"
                             }`}
                           >
                             {customerResponse.hasCheckedIn
-                              ? "Đã check in"
+                              ? isCustomerAlreadyCheckedInError
+                                ? "Đã check in trước đó"
+                                : "Check in thành công"
                               : "Đang chờ check in"}
                           </p>
                           <p
                             className={`text-xs ${
                               customerResponse.hasCheckedIn
-                                ? "text-green-700"
+                                ? isCustomerAlreadyCheckedInError
+                                  ? "text-red-700"
+                                  : "text-green-700"
                                 : "text-amber-700"
                             }`}
                           >
                             {customerResponse.hasCheckedIn
-                              ? "Customer has been verified"
+                              ? isCustomerAlreadyCheckedInError
+                                ? "Vui lòng không đeo vòng tay cho khách này"
+                                : null
                               : "Vui lòng kiểm tra lại thông tin khách hàng"}
                           </p>
                         </div>
@@ -460,6 +548,63 @@ const AdminIndex = () => {
                           </div>
                         </div>
                       </motion.div>
+                      {!customerResponse.hasCheckedIn && (
+                        <AlertDialog
+                          open={isCheckInConfirmDialogOpen}
+                          onOpenChange={setIsCheckInConfirmDialogOpen}
+                        >
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              className="w-full -mt-2 cursor-pointer"
+                              disabled={checkInMutation.isPending}
+                            >
+                              {checkInMutation.isPending ? (
+                                "Đang check in..."
+                              ) : (
+                                <>
+                                  Check in <UserRoundCheck />
+                                </>
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Xác nhận check in
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Bạn có chắc chắn muốn check in cho khách hàng:
+                                <br /> <strong>
+                                  {customerResponse.name}
+                                </strong>{" "}
+                                - {customerResponse.studentId}?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel
+                                className="cursor-pointer"
+                                disabled={checkInMutation.isPending}
+                              >
+                                Hủy
+                              </AlertDialogCancel>
+                              <Button
+                                className="cursor-pointer"
+                                disabled={checkInMutation.isPending}
+                                onClick={() =>
+                                  checkInMutation.mutate(
+                                    customerResponse.studentId
+                                  )
+                                }
+                              >
+                                Xác nhận{" "}
+                                {checkInMutation.isPending && (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                )}
+                              </Button>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </motion.div>
                   </motion.div>
                 ) : error ? (

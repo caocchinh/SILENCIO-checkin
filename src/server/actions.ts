@@ -127,3 +127,67 @@ export async function getCustomerInfoBySession({
     );
   }
 }
+
+export async function checkInUser({
+  customerId,
+}: {
+  customerId: string;
+}): Promise<ActionResponse<{ hasCheckedIn: boolean }>> {
+  const functionInvokerSession = await verifySession();
+  if (!functionInvokerSession || functionInvokerSession.user.role !== "admin") {
+    return createActionError(
+      "SESSION_VERIFICATION_FAILED",
+      "Session verification failed"
+    );
+  }
+
+  try {
+    // Validate input
+    if (!customerId || customerId.trim() === "") {
+      return createActionError("INVALID_INPUT", "Customer ID is required");
+    }
+
+    // Get customer from database
+    const customerRecord = await retryDatabase(
+      () =>
+        db.query.customer.findFirst({
+          where: eq(customer.studentId, customerId),
+        }),
+      "fetch customer by ID"
+    );
+
+    if (!customerRecord) {
+      return createActionError("NOT_FOUND", "Customer not found");
+    }
+
+    // Check if already checked in
+    if (customerRecord.hasCheckedIn) {
+      return createActionError(
+        "CUSTOMER_ALREADY_CHECKED_IN",
+        "Customer has already checked in"
+      );
+    }
+
+    // Update check-in status
+    await retryDatabase(
+      () =>
+        db
+          .update(customer)
+          .set({
+            hasCheckedIn: true,
+          })
+          .where(eq(customer.studentId, customerId)),
+      "update customer check-in status"
+    );
+
+    return createActionSuccess<{ hasCheckedIn: boolean }>({
+      hasCheckedIn: true,
+    });
+  } catch (error) {
+    console.error("Error checking in user:", error);
+    return createActionError(
+      "DATABASE_ERROR",
+      "Failed to update check-in status"
+    );
+  }
+}

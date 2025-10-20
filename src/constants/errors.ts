@@ -19,6 +19,7 @@ export const ERROR_CODES = {
   NOT_FOUND: "not-found",
   CUSTOMER_SESSION_EXPIRED: "customer-session-expired",
   ALREADY_EXISTS: "already-exists",
+  CUSTOMER_ALREADY_CHECKED_IN: "customer-already-checked-in",
 } as const;
 
 // User-friendly error messages
@@ -41,6 +42,7 @@ export const ERROR_MESSAGES = {
   [ERROR_CODES.CUSTOMER_SESSION_EXPIRED]:
     "Phiên đăng nhập của khách hàng đã hết hạn",
   [ERROR_CODES.ALREADY_EXISTS]: "Tài nguyên đã tồn tại",
+  [ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN]: "Khách hàng đã check in rồi",
 } as const;
 
 // HTTP status codes for API responses
