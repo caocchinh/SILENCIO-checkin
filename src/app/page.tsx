@@ -41,8 +41,7 @@ export default async function HomePage({ searchParams }: HomeProps) {
       );
     }
 
-    // Check if user should be signed out (no customer or unsupported ticket type)
-
+    // Check if user should be signed out (not customer)
     if (!session.customer) {
       try {
         await retryAuth(async () => {
@@ -67,10 +66,15 @@ export default async function HomePage({ searchParams }: HomeProps) {
       );
     }
 
-    // Valid customer with supported ticket type - redirect to dashboard
+    // Valid customer and not an admin - redirect to dashboard
+    await retryAuth(async () => {
+      await auth.api.revokeOtherSessions({
+        headers: await headers(),
+      });
+    }, "Revoke other customer sessions");
     return (
       <RedirectMessage
-        message="Đang chuyển hướng đến trang lấy số thứ tự"
+        message="Đang chuyển hướng đến trang check-in"
         subMessage="Vui lòng chờ trong giây lát.."
         redirectTo="/dashboard"
       />
@@ -90,8 +94,8 @@ export default async function HomePage({ searchParams }: HomeProps) {
 
   return (
     <div className="h-[calc(100vh-40px)] relative flex items-center justify-center w-full bg-[url('/assets/bg.png')] overflow-hidden bg-no-repeat bg-cover">
-      <div className="bg-[url('/assets/bg-2.png')] bg-no-repeat bg-cover bg-top max-w-[90%] relative">
-        <div className=" absolute top-[52%] left-1/2 -translate-x-1/2 -translate-y-[40%] flex items-center justify-center flex-col min-w-[330px] w-[90%]">
+      <div className="max-w-[90%] relative">
+        <div className=" absolute top-[52%] left-1/2 -translate-x-1/2 -translate-y-[40%] flex items-center justify-center flex-col min-w-[250px] w-[70%]">
           <h1 className="text-[#FFD700] -mt-10 mb-2 login_title text-[42px] font-bold font-italianno text-center  ">
             Cổng check-in
           </h1>

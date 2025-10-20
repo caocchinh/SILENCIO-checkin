@@ -3,22 +3,16 @@ import React from "react";
 import { CardDescription, CardTitle } from "./ui/card";
 import { LogoutButton } from "./LogoutButton";
 import { cn } from "@/lib/utils";
-import { Student } from "@/constants/types";
-import { Button } from "./ui/button";
-import { RefreshCw } from "lucide-react";
+import { Customer } from "@/constants/types";
 
 const Navbar = ({
   session,
-  student,
+  customer,
   className,
-  handleRefresh,
-  loading,
 }: {
   session: any;
-  student: Student;
+  customer: Customer;
   className?: string;
-  handleRefresh: () => void;
-  loading: boolean;
 }) => {
   return (
     <div
@@ -50,7 +44,7 @@ const Navbar = ({
         </div>
         <div>
           <CardTitle className="text-sm">
-            {student!.name} - {student?.homeroom} - Vé {student?.ticketType}
+            {customer!.name} - {customer?.homeroom} - Vé {customer?.ticketType}
           </CardTitle>
           <CardDescription className="text-[10px]">
             {session.user.email}
@@ -58,15 +52,6 @@ const Navbar = ({
         </div>
       </div>
       <div className="flex gap-3 items-center justify-center flex-wrap flex-col sm:flex-row w-full sm:w-max">
-        <Button
-          onClick={handleRefresh}
-          className="w-full sm:w-max cursor-pointer"
-          disabled={loading}
-          variant="outline"
-        >
-          <RefreshCw className={cn("mr-2 h-4", loading && "animate-spin")} />
-          Làm mới
-        </Button>
         <LogoutButton />
       </div>
     </div>

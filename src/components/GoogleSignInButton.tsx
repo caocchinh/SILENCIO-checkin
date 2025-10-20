@@ -25,7 +25,7 @@ export function GoogleSignInButton() {
     <div className="flex flex-col gap-2 w-full items-center">
       <Button
         onClick={handleSignIn}
-        className="flex items-center cursor-pointer justify-center gap-2 rounded-md bg-transparent px-4 py-2 text-sm font-medium text-white w-[80%] shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50/10"
+        className="flex items-center cursor-pointer justify-center gap-2 rounded-md bg-transparent px-4 py-2 text-sm font-medium text-white w-full shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50/10"
       >
         <>
           <svg
