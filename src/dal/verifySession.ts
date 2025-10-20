@@ -6,7 +6,6 @@ import { retryAuth, retryDatabase } from "./retry";
 import { db } from "@/drizzle/db";
 import { customer } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
-import { UNSUPPORT_TICKET_TYPE } from "@/constants/constants";
 
 export const verifySession = cache(async () => {
   return retryAuth(async () => {
@@ -40,11 +39,7 @@ export const verifyCustomerSession = cache(async () => {
     "fetch customer for session verification"
   );
 
-  // Return null if customer doesn't exist or has unsupported ticket type
-  if (
-    !currentCustomer ||
-    UNSUPPORT_TICKET_TYPE.includes(currentCustomer.ticketType)
-  ) {
+  if (!currentCustomer) {
     return { session, customer: null };
   }
 
