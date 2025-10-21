@@ -8,7 +8,6 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { PIN_VERIFICATION_INTERVAL } from "@/constants/constants";
 import {
   checkPinStatusAction,
   verifyAdminPinAction,
@@ -24,6 +23,7 @@ interface PinVerificationContextType {
   clearAdminStatus: () => Promise<void>;
   lockScreen: () => void;
   clearError: () => void;
+  getTimeSinceLastActivity: () => number;
 }
 
 const PinVerificationContext = createContext<
@@ -51,8 +51,6 @@ export const PinVerificationProvider: React.FC<
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
-  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const inactivityCheckRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check PIN verification status from server
   const checkPinStatus = useCallback(async () => {
@@ -61,7 +59,6 @@ export const PinVerificationProvider: React.FC<
       const result = await checkPinStatusAction();
 
       if (!result.success) {
-        console.error("PIN check failed:", result.error);
         const errorMessage = result.code || ERROR_CODES.INTERNAL_SERVER_ERROR;
         setError(getErrorMessage(errorMessage));
         setIsVerified(false);
@@ -70,12 +67,11 @@ export const PinVerificationProvider: React.FC<
 
       if (result.data?.verified) {
         setIsVerified(true);
-        setError(null);
       } else {
         setIsVerified(false);
       }
+      setError(null);
     } catch (error) {
-      console.error("Error checking PIN status:", error);
       setError(
         error instanceof Error
           ? error.message
@@ -102,7 +98,6 @@ export const PinVerificationProvider: React.FC<
         setError(getErrorMessage(errorMessage));
       }
     } catch (error) {
-      console.error("Error verifying PIN:", error);
       setError(
         error instanceof Error
           ? error.message
@@ -127,13 +122,11 @@ export const PinVerificationProvider: React.FC<
         setError(getErrorMessage(errorMessage));
       }
     } catch (error) {
-      console.error("Error clearing PIN:", error);
       setError(
         error instanceof Error
           ? error.message
           : "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
       );
-      setIsVerified(false);
     }
   }, []);
 
@@ -143,39 +136,32 @@ export const PinVerificationProvider: React.FC<
   }, []);
 
   // Lock screen manually
-  const lockScreen = useCallback(() => {
-    setIsVerified(false);
+  const lockScreen = useCallback(async () => {
     setError(null);
-    clearAdminStatus();
-  }, [clearAdminStatus]);
+    await clearAdminStatus();
+  }, [clearAdminStatus, setError]);
+
+  // Get time since last activity
+  const getTimeSinceLastActivity = useCallback(() => {
+    return Date.now() - lastActivityRef.current;
+  }, []);
 
   // Track user activity
   const handleActivity = useCallback(() => {
     lastActivityRef.current = Date.now();
   }, []);
 
-  // Check for inactivity
-  const checkInactivity = useCallback(() => {
-    const currentTime = Date.now();
-    const timeSinceLastActivity = currentTime - lastActivityRef.current;
-
-    if (timeSinceLastActivity >= PIN_VERIFICATION_INTERVAL && isVerified) {
-      console.log("User inactive for 5 minutes, locking screen...");
-      lockScreen();
-    }
-  }, [isVerified, lockScreen]);
-
   // Handle visibility change (tab switch/leave)
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // Tab is hidden or user left the page
-        console.log("Tab hidden or user left, clearing verification...");
-        clearAdminStatus();
-      } else {
-        // Tab is visible again, check PIN status
-        console.log("Tab visible again, checking PIN status...");
-        checkPinStatus();
+    const handleVisibilityChange = async () => {
+      if (isVerified) {
+        if (document.hidden) {
+          // Tab is hidden or user left the page
+          await clearAdminStatus();
+        } else {
+          // Tab is visible again, check PIN status
+          await checkPinStatus();
+        }
       }
     };
 
@@ -184,52 +170,35 @@ export const PinVerificationProvider: React.FC<
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [clearAdminStatus, checkPinStatus]);
+  }, [clearAdminStatus, checkPinStatus, isVerified]);
 
   // Initial check on mount
   useEffect(() => {
     checkPinStatus();
   }, [checkPinStatus]);
 
-  // Set up periodic check every minute
-  useEffect(() => {
-    if (isVerified) {
-      checkIntervalRef.current = setInterval(() => {
-        checkPinStatus();
-      }, 60000); // Check every minute
-    }
-
-    return () => {
-      if (checkIntervalRef.current) {
-        clearInterval(checkIntervalRef.current);
-      }
-    };
-  }, [isVerified, checkPinStatus]);
-
   // Set up inactivity check
   useEffect(() => {
     if (isVerified) {
-      // Check for inactivity every 30 seconds
-      inactivityCheckRef.current = setInterval(() => {
-        checkInactivity();
-      }, 30000);
-
       // Track user activity
-      const events = ["mousedown", "keydown", "scroll", "touchstart"];
+      const events = [
+        "mousedown",
+        "keydown",
+        "scroll",
+        "touchstart",
+        "mousemove",
+      ];
       events.forEach((event) => {
         document.addEventListener(event, handleActivity);
       });
 
       return () => {
-        if (inactivityCheckRef.current) {
-          clearInterval(inactivityCheckRef.current);
-        }
         events.forEach((event) => {
           document.removeEventListener(event, handleActivity);
         });
       };
     }
-  }, [isVerified, handleActivity, checkInactivity]);
+  }, [isVerified, handleActivity]);
 
   // Handle page unload
   useEffect(() => {
@@ -252,6 +221,7 @@ export const PinVerificationProvider: React.FC<
     clearAdminStatus,
     lockScreen,
     clearError,
+    getTimeSinceLastActivity,
   };
 
   return (

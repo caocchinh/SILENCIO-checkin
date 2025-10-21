@@ -12,7 +12,7 @@ import { retryDatabase, retryExternalApi } from "@/dal/retry";
 import { verifySession } from "@/dal/verifySession";
 import { CustomerInfo } from "@/constants/types";
 import { getServerAblyClient, CHANNELS, EVENT_NAMES } from "@/lib/ably";
-import { ADMIN_PIN, PIN_VERIFICATION_INTERVAL } from "@/constants/constants";
+import { ADMIN_PIN } from "@/constants/constants";
 import { cookies } from "next/headers";
 
 export async function getCustomerInfoBySession({
@@ -221,20 +221,6 @@ export async function checkPinStatusAction(): Promise<
 
     if (!pinVerifiedCookie) {
       return createActionSuccess<{ verified: boolean }>({ verified: false });
-    }
-
-    // Check if the verification is still valid (within the interval)
-    const verifiedTimestamp = parseInt(pinVerifiedCookie.value);
-    const currentTime = Date.now();
-    const timeDifference = currentTime - verifiedTimestamp;
-
-    if (timeDifference > PIN_VERIFICATION_INTERVAL) {
-      // Verification expired, remove the cookie
-      cookieStore.delete("admin_pin_verified");
-      return createActionSuccess<{ verified: boolean; expired: boolean }>({
-        verified: false,
-        expired: true,
-      });
     }
 
     return createActionSuccess<{ verified: boolean }>({ verified: true });

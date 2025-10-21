@@ -135,6 +135,7 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
                 setPin(e);
               }}
               disabled={verifyPinMutation.isPending}
+              secure={true}
             >
               <InputOTPGroup className="gap-2">
                 {[...Array(6)].map((_, index) => (

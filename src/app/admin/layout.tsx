@@ -10,6 +10,7 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { PinVerificationProvider } from "@/context/PinVerificationContext";
 import { PinVerification } from "@/components/PinVerification";
 import { LockButton } from "@/components/LockButton";
+import { ActivityTimer } from "@/components/ActivityTimer";
 
 const AdminContent = async ({ children }: { children: React.ReactNode }) => {
   let session;
@@ -56,14 +57,8 @@ const AdminContent = async ({ children }: { children: React.ReactNode }) => {
                 <h1 className="w-full font-semibold text-3xl text-[#0084ff]">
                   Hệ thống check in
                 </h1>
-                <div className="flex items-center justify-center gap-2">
-                  <h3 className="text-gray-500 text-sm">{session.user.email}</h3>
-                  <span className="text-gray-500 text-sm">•</span>
-                  <h3 className="text-gray-500 text-sm">
-                    {session.user.role.charAt(0).toUpperCase() +
-                      session.user.role.slice(1)}
-                  </h3>
-                </div>
+                <h3 className="text-gray-500 text-sm">{session.user.email}</h3>
+                <ActivityTimer />
               </div>
               <div className="flex items-center gap-2">
                 <LockButton />
