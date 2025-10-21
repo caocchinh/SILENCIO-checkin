@@ -12,6 +12,8 @@ import { retryDatabase, retryExternalApi } from "@/dal/retry";
 import { verifySession } from "@/dal/verifySession";
 import { CustomerInfo } from "@/constants/types";
 import { getServerAblyClient, CHANNELS, EVENT_NAMES } from "@/lib/ably";
+import { ADMIN_PIN, PIN_VERIFICATION_INTERVAL } from "@/constants/constants";
+import { cookies } from "next/headers";
 
 export async function getCustomerInfoBySession({
   sessionId,
@@ -171,17 +173,14 @@ export async function checkInUser({
 
     // Publish real-time update to Ably with exponential backoff retry
     try {
-      await retryExternalApi(
-        async () => {
-          const ablyClient = getServerAblyClient();
-          const channel = ablyClient.channels.get(CHANNELS.CUSTOMER_UPDATES);
-          await channel.publish(EVENT_NAMES.CHECKED_IN, {
-            studentId: customerId,
-            hasCheckedIn: true,
-          });
-        },
-        `publish check-in to Ably for ${customerId}`
-      );
+      await retryExternalApi(async () => {
+        const ablyClient = getServerAblyClient();
+        const channel = ablyClient.channels.get(CHANNELS.CUSTOMER_UPDATES);
+        await channel.publish(EVENT_NAMES.CHECKED_IN, {
+          studentId: customerId,
+          hasCheckedIn: true,
+        });
+      }, `publish check-in to Ably for ${customerId}`);
       console.log("Published check-in update to Ably for:", customerId);
     } catch (ablyError) {
       console.error("Error publishing to Ably after retries:", ablyError);
@@ -196,6 +195,114 @@ export async function checkInUser({
     return createActionError(
       "DATABASE_ERROR",
       "Failed to update check-in status"
+    );
+  }
+}
+
+export async function checkPinStatusAction(): Promise<
+  ActionResponse<{ verified: boolean; expired?: boolean }>
+> {
+  try {
+    // Verify the user session first
+    const session = await verifySession();
+
+    if (!session) {
+      return createActionError("NOT_LOGGED_IN", "Session verification failed");
+    }
+
+    // Check if user is admin
+    if (session.user.role !== "admin") {
+      return createActionError("UNAUTHORIZED", "Unauthorized access");
+    }
+
+    // Check if PIN verification cookie exists
+    const cookieStore = await cookies();
+    const pinVerifiedCookie = cookieStore.get("admin_pin_verified");
+
+    if (!pinVerifiedCookie) {
+      return createActionSuccess<{ verified: boolean }>({ verified: false });
+    }
+
+    // Check if the verification is still valid (within the interval)
+    const verifiedTimestamp = parseInt(pinVerifiedCookie.value);
+    const currentTime = Date.now();
+    const timeDifference = currentTime - verifiedTimestamp;
+
+    if (timeDifference > PIN_VERIFICATION_INTERVAL) {
+      // Verification expired, remove the cookie
+      cookieStore.delete("admin_pin_verified");
+      return createActionSuccess<{ verified: boolean; expired: boolean }>({
+        verified: false,
+        expired: true,
+      });
+    }
+
+    return createActionSuccess<{ verified: boolean }>({ verified: true });
+  } catch (error) {
+    console.error("Error checking PIN:", error);
+    return createActionError(
+      "INTERNAL_SERVER_ERROR",
+      "Failed to check PIN verification"
+    );
+  }
+}
+
+export async function verifyAdminPinAction({
+  pin,
+}: {
+  pin: string;
+}): Promise<ActionResponse> {
+  try {
+    // Verify the user session first
+    const session = await verifySession();
+
+    if (!session) {
+      return createActionError("NOT_LOGGED_IN", "Session verification failed");
+    }
+
+    // Check if user is admin
+    if (session.user.role !== "admin") {
+      return createActionError("UNAUTHORIZED", "Unauthorized access");
+    }
+
+    // Validate PIN input
+    if (!pin) {
+      return createActionError("PIN_REQUIRED", "PIN is required");
+    }
+
+    // Verify the PIN
+    if (pin === ADMIN_PIN) {
+      // Set a secure cookie with the PIN verification timestamp
+      const cookieStore = await cookies();
+      cookieStore.set("admin_pin_verified", Date.now().toString(), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24, // 24 hours
+        path: "/",
+      });
+
+      return createActionSuccess();
+    } else {
+      return createActionError("PIN_INVALID", "Invalid PIN");
+    }
+  } catch (error) {
+    console.error("Error verifying PIN:", error);
+    return createActionError("INTERNAL_SERVER_ERROR", "Failed to verify PIN");
+  }
+}
+
+export async function clearAdminStatusAction(): Promise<ActionResponse> {
+  try {
+    const cookieStore = await cookies();
+    cookieStore.delete("admin_pin_verified");
+
+    return createActionSuccess();
+  } catch (error) {
+    console.error("Error clearing PIN:", error);
+    return createActionError(
+      "INTERNAL_SERVER_ERROR",
+      "Failed to clear PIN verification"
     );
   }
 }

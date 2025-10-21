@@ -29,23 +29,14 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
   const [localError, setLocalError] = useState<string>("");
   const firstSlotRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    setPin("");
-  }, [isLoading]);
-
   const verifyPinMutation = useMutation({
     mutationFn: async (pinString: string) => {
-      const result = await verifyPin(pinString);
-      if (!result.success) {
-        throw new Error(result.error || "Mã PIN không đúng. Vui lòng thử lại.");
-      }
-      return result;
+      await verifyPin(pinString);
     },
     onSuccess: () => {
       setPin("");
     },
-    onError: (error: Error) => {
-      setLocalError(error.message);
+    onError: () => {
       setPin("");
       setTimeout(() => {
         firstSlotRef.current?.focus();
@@ -80,7 +71,7 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
       <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-          <p className="text-gray-600">Đang kiểm tra xác thực...</p>
+          <p className="text-gray-600">Đang xác thực</p>
           {contextError && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -128,7 +119,7 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
                 Xác thực staff
               </h2>
               <p className="mt-2 text-sm text-gray-600">
-                Nhập mã PIN để truy cập trang quản trị
+                Nhập mã PIN để truy hệ thống
               </p>
             </div>
           </div>
@@ -193,7 +184,7 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
           {verifyPinMutation.isPending && (
             <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
-              <span>Đang xác thực...</span>
+              <span>Đang xác thực PIN...</span>
             </div>
           )}
 

@@ -9,13 +9,19 @@ import React, {
   useRef,
 } from "react";
 import { PIN_VERIFICATION_INTERVAL } from "@/constants/constants";
+import {
+  checkPinStatusAction,
+  verifyAdminPinAction,
+  clearAdminStatusAction,
+} from "@/server/actions";
+import { ERROR_CODES, getErrorMessage } from "@/constants/errors";
 
 interface PinVerificationContextType {
   isVerified: boolean;
   isLoading: boolean;
   error: string | null;
-  verifyPin: (pin: string) => Promise<{ success: boolean; error?: string }>;
-  clearVerification: () => Promise<{ success: boolean; error?: string }>;
+  verifyPin: (pin: string) => Promise<void>;
+  clearAdminStatus: () => Promise<void>;
   lockScreen: () => void;
   clearError: () => void;
 }
@@ -51,23 +57,18 @@ export const PinVerificationProvider: React.FC<
   // Check PIN verification status from server
   const checkPinStatus = useCallback(async () => {
     try {
-      const response = await fetch("/api/admin/check-pin", {
-        method: "GET",
-        credentials: "include",
-      });
       setIsLoading(true);
+      const result = await checkPinStatusAction();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("PIN check failed:", errorData);
-        setError(errorData.error || "Không thể kiểm tra trạng thái PIN");
+      if (!result.success) {
+        console.error("PIN check failed:", result.error);
+        const errorMessage = result.code || ERROR_CODES.INTERNAL_SERVER_ERROR;
+        setError(getErrorMessage(errorMessage));
         setIsVerified(false);
         return;
       }
 
-      const data = await response.json();
-
-      if (data.verified) {
+      if (result.data?.verified) {
         setIsVerified(true);
         setError(null);
       } else {
@@ -76,8 +77,8 @@ export const PinVerificationProvider: React.FC<
     } catch (error) {
       console.error("Error checking PIN status:", error);
       setError(
-        error instanceof Error && error.message.includes("Failed to fetch")
-          ? "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng."
+        error instanceof Error
+          ? error.message
           : "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
       );
       setIsVerified(false);
@@ -87,73 +88,51 @@ export const PinVerificationProvider: React.FC<
   }, []);
 
   // Verify PIN
-  const verifyPin = useCallback(
-    async (pin: string): Promise<{ success: boolean; error?: string }> => {
-      try {
-        const response = await fetch("/api/admin/verify-pin", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ pin }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-          setIsVerified(true);
-          setError(null);
-          lastActivityRef.current = Date.now();
-          return { success: true };
-        } else {
-          // Handle specific error responses
-          const errorMessage = data.error || "Mã PIN không đúng";
-          setError(errorMessage);
-          return { success: false, error: errorMessage };
-        }
-      } catch (error) {
-        console.error("Error verifying PIN:", error);
-        const errorMessage =
-          error instanceof Error && error.message.includes("Failed to fetch")
-            ? "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng."
-            : "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.";
-        setError(errorMessage);
-        setIsVerified(false);
-        return { success: false, error: errorMessage };
-      }
-    },
-    []
-  );
-
-  // Clear verification
-  const clearVerification = useCallback(async () => {
+  const verifyPin = useCallback(async (pin: string): Promise<void> => {
     try {
-      const response = await fetch("/api/admin/clear-pin", {
-        method: "POST",
-        credentials: "include",
-      });
-      const data = await response.json();
+      const result = await verifyAdminPinAction({ pin });
 
-      if (response.ok && data.success) {
+      if (result.success) {
         setIsVerified(true);
         setError(null);
         lastActivityRef.current = Date.now();
-        return { success: true };
       } else {
         // Handle specific error responses
-        const errorMessage = data.error || "Mã PIN không đúng";
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
+        const errorMessage = result.code || ERROR_CODES.INTERNAL_SERVER_ERROR;
+        setError(getErrorMessage(errorMessage));
+      }
+    } catch (error) {
+      console.error("Error verifying PIN:", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
+      );
+      setIsVerified(false);
+    }
+  }, []);
+
+  // Clear verification
+  const clearAdminStatus = useCallback(async () => {
+    setIsVerified(false);
+    try {
+      const result = await clearAdminStatusAction();
+
+      if (result.success) {
+        setError(null);
+        lastActivityRef.current = Date.now();
+      } else {
+        // Handle specific error responses
+        const errorMessage = result.code || ERROR_CODES.INTERNAL_SERVER_ERROR;
+        setError(getErrorMessage(errorMessage));
       }
     } catch (error) {
       console.error("Error clearing PIN:", error);
-      const errorMessage =
-        error instanceof Error && error.message.includes("Failed to fetch")
-          ? "Không thể kết nối đến máy chủ."
-          : "Đã xảy ra lỗi khi xóa xác thực.";
-      return { success: false, error: errorMessage };
-    } finally {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
+      );
       setIsVerified(false);
     }
   }, []);
@@ -167,8 +146,8 @@ export const PinVerificationProvider: React.FC<
   const lockScreen = useCallback(() => {
     setIsVerified(false);
     setError(null);
-    clearVerification();
-  }, [clearVerification]);
+    clearAdminStatus();
+  }, [clearAdminStatus]);
 
   // Track user activity
   const handleActivity = useCallback(() => {
@@ -192,7 +171,7 @@ export const PinVerificationProvider: React.FC<
       if (document.hidden) {
         // Tab is hidden or user left the page
         console.log("Tab hidden or user left, clearing verification...");
-        clearVerification();
+        clearAdminStatus();
       } else {
         // Tab is visible again, check PIN status
         console.log("Tab visible again, checking PIN status...");
@@ -205,7 +184,7 @@ export const PinVerificationProvider: React.FC<
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [clearVerification, checkPinStatus]);
+  }, [clearAdminStatus, checkPinStatus]);
 
   // Initial check on mount
   useEffect(() => {
@@ -255,7 +234,7 @@ export const PinVerificationProvider: React.FC<
   // Handle page unload
   useEffect(() => {
     const handleBeforeUnload = () => {
-      clearVerification();
+      clearAdminStatus();
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -263,14 +242,14 @@ export const PinVerificationProvider: React.FC<
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [clearVerification]);
+  }, [clearAdminStatus]);
 
   const value: PinVerificationContextType = {
     isVerified,
     isLoading,
     error,
     verifyPin,
-    clearVerification,
+    clearAdminStatus,
     lockScreen,
     clearError,
   };

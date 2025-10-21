@@ -78,7 +78,7 @@ export interface ActionSuccessResponse<T = unknown> {
 // Error response structure for server actions
 export interface ActionErrorResponse {
   success: false;
-  message: string;
+  error: string;
   code?: string;
 }
 
@@ -118,11 +118,11 @@ export function createActionError(
   customMessage?: string
 ): ActionErrorResponse {
   const errorCode = ERROR_CODES[code];
-  const message = customMessage || ERROR_MESSAGES[errorCode];
+  const error = customMessage || ERROR_MESSAGES[errorCode];
 
   return {
     success: false,
-    message,
+    error,
     code: errorCode,
   };
 }
