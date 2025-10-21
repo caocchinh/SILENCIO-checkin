@@ -29,6 +29,12 @@ import { Button } from "@/components/ui/button";
 import { cn, errorToast, successToast } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -46,6 +52,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { getErrorMessage } from "@/constants/errors";
 
 const AdminTraditionalPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,7 +62,8 @@ const AdminTraditionalPage = () => {
   const [chosenCustomer, setChosenCustomer] = useState<CustomerInfo | null>(
     null
   );
-  const [,] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const queryClient = useQueryClient();
 
   // Check-in mutation
@@ -63,7 +71,7 @@ const AdminTraditionalPage = () => {
     mutationFn: async (customerId: string) => {
       const result = await checkInUser({ customerId });
       if (!result.success) {
-        throw new Error(result.message || "Failed to check in customer");
+        throw new Error(result.code || "Failed to check in customer");
       }
       return result.data;
     },
@@ -78,8 +86,12 @@ const AdminTraditionalPage = () => {
       setCurrentAccordionItem("");
     },
     onError: (error: Error) => {
+      const message = getErrorMessage(
+        error.message || "Không thể check in khách hàng."
+      );
+      setErrorMessage(message);
       errorToast({
-        message: error.message || "Không thể check in khách hàng.",
+        message: message,
       });
     },
   });
@@ -187,7 +199,7 @@ const AdminTraditionalPage = () => {
       <div className="min-h-screen w-full p-4">
         <div className=" flex items-start gap-4 justify-center flex-wrap">
           {/* Header */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-4 border border-slate-200 min-w-[90%] sm:min-w-[400px] flex-1">
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-4 border border-slate-200 min-w-[90%] sm:min-w-[400px] max-w-[450px] flex-1">
             <div className="flex items-center sm:items-start justify-between sm:flex-row flex-col gap-4">
               <div className="flex items-start gap-3 justify-start">
                 <div>
@@ -195,23 +207,30 @@ const AdminTraditionalPage = () => {
                     <h1 className="text-2xl font-bold text-slate-900">
                       Dữ liệu khách hàng
                     </h1>
-                    <div
-                      title={
-                        isConnected
-                          ? "Kết nối thời gian thực"
-                          : connectionState === "connecting"
-                          ? "Đang kết nối..."
-                          : "Mất kết nối"
-                      }
-                    >
-                      {isConnected ? (
-                        <Wifi className="w-5 h-5 text-green-500" />
-                      ) : connectionState === "connecting" ? (
-                        <Loader2 className="w-5 h-5 text-yellow-500 animate-spin" />
-                      ) : (
-                        <WifiOff className="w-5 h-5 text-red-500" />
-                      )}
-                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div>
+                            {isConnected ? (
+                              <Wifi className="w-5 h-5 text-green-500" />
+                            ) : connectionState === "connecting" ? (
+                              <Loader2 className="w-5 h-5 text-yellow-500 animate-spin" />
+                            ) : (
+                              <WifiOff className="w-5 h-5 text-red-500" />
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            {isConnected
+                              ? "Đã kết nối thời gian thực"
+                              : connectionState === "connecting"
+                              ? "Đang kết nối..."
+                              : "Mất kết nối"}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                   <div className="text-sm text-slate-500 text-center sm:text-left">
                     {customerData ? (
@@ -536,7 +555,10 @@ const AdminTraditionalPage = () => {
       </div>
       <AlertDialog
         open={isCheckInConfirmDialogOpen}
-        onOpenChange={setIsCheckInConfirmDialogOpen}
+        onOpenChange={(e) => {
+          setIsCheckInConfirmDialogOpen(e);
+          setErrorMessage(null);
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -554,6 +576,7 @@ const AdminTraditionalPage = () => {
               ?
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {errorMessage && <div className="text-red-500">{errorMessage}</div>}
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={checkInMutation.isPending}

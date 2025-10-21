@@ -26,11 +26,19 @@ import {
   Loader2,
   GhostIcon,
   ListOrdered,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ERROR_CODES, getErrorMessage } from "@/constants/errors";
 import { TICKET_IMAGE } from "@/constants/constants";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -227,7 +235,7 @@ const AdminOnlinePage = () => {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center w-full  p-2 md:p-4">
+    <div className="min-h-screen flex items-start justify-center w-full  p-2 md:p-4">
       {/* Main Content Grid */}
       <div className="flex flex-row flex-wrap gap-6 w-full md:items-start items-center justify-center">
         {/* Scanner Section */}
@@ -313,10 +321,36 @@ const AdminOnlinePage = () => {
           className="bg-white rounded-xl shadow-lg p-6 border border-slate-200 flex-1 w-full min-w-[90%] sm:min-w-[420px]  max-w-[550px] "
           ref={personalInfoRef}
         >
-          <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <User className="w-5 h-5" />
-            Thông tin khách hàng
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Thông tin khách hàng
+            </h2>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    {isConnected ? (
+                      <Wifi className="w-5 h-5 text-green-500" />
+                    ) : connectionState === "connecting" ? (
+                      <Loader2 className="w-5 h-5 text-yellow-500 animate-spin" />
+                    ) : (
+                      <WifiOff className="w-5 h-5 text-red-500" />
+                    )}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {isConnected
+                      ? "Đã kết nối thời gian thực"
+                      : connectionState === "connecting"
+                      ? "Đang kết nối..."
+                      : "Mất kết nối"}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
 
           <div className="min-h-[500px]">
             <AnimatePresence mode="wait">
