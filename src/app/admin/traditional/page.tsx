@@ -216,7 +216,7 @@ const AdminTraditionalPage = () => {
                             ) : connectionState === "connecting" ? (
                               <Loader2 className="w-5 h-5 text-yellow-500 animate-spin" />
                             ) : (
-                              <WifiOff className="w-5 h-5 text-red-500" />
+                              <WifiOff className="w-5 h-5 text-red-500  animate-pulse" />
                             )}
                           </div>
                         </TooltipTrigger>

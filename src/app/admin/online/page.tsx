@@ -290,7 +290,7 @@ const AdminOnlinePage = () => {
 
                     const now = Date.now();
                     const timeSinceLastUpdate = now - lastKeyUpdateRef.current;
-                    if (!isFetching && timeSinceLastUpdate >= 3000) {
+                    if (!isFetching && timeSinceLastUpdate >= 2000) {
                       if (play) play();
                       setKey((prevKey) => prevKey + 1);
                       lastKeyUpdateRef.current = now;
@@ -336,7 +336,7 @@ const AdminOnlinePage = () => {
                     ) : connectionState === "connecting" ? (
                       <Loader2 className="w-5 h-5 text-yellow-500 animate-spin" />
                     ) : (
-                      <WifiOff className="w-5 h-5 text-red-500" />
+                      <WifiOff className="w-5 h-5 text-red-500  animate-pulse" />
                     )}
                   </div>
                 </TooltipTrigger>
@@ -678,10 +678,15 @@ const AdminOnlinePage = () => {
                         <AlertDialogTrigger asChild>
                           <Button
                             className="w-full -mt-2 cursor-pointer"
-                            disabled={checkInMutation.isPending}
+                            disabled={checkInMutation.isPending || !isConnected}
                           >
                             {checkInMutation.isPending ? (
                               "Đang check in..."
+                            ) : !isConnected ? (
+                              <>
+                                Không có kết nối{" "}
+                                <WifiOff className=" animate-pulse" />
+                              </>
                             ) : (
                               <>
                                 Check in <UserRoundCheck />
@@ -710,16 +715,27 @@ const AdminOnlinePage = () => {
                             </AlertDialogCancel>
                             <Button
                               className="cursor-pointer"
-                              disabled={checkInMutation.isPending}
+                              disabled={
+                                checkInMutation.isPending || !isConnected
+                              }
                               onClick={() =>
                                 checkInMutation.mutate(
                                   customerResponse.studentId
                                 )
                               }
                             >
-                              Xác nhận{" "}
-                              {checkInMutation.isPending && (
-                                <Loader2 className="w-4 h-4 animate-spin" />
+                              {!isConnected ? (
+                                <>
+                                  Không có kết nối{" "}
+                                  <WifiOff className=" animate-pulse" />
+                                </>
+                              ) : (
+                                <>
+                                  Xác nhận{" "}
+                                  {checkInMutation.isPending && (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  )}
+                                </>
                               )}
                             </Button>
                           </AlertDialogFooter>
