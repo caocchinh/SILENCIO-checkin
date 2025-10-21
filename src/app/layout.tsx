@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import Image from "next/image";
 import { QueryProvider } from "@/context/QueryProvider";
+import NextTopLoader from "nextjs-toploader";
 
 const pangolin = localFont({
   src: "../fonts/[Text] Pangolin-Regular.ttf",
@@ -34,6 +35,11 @@ export default function RootLayout({
         className={`${pangolin.variable} ${italianno.variable} antialiased`}
       >
         <QueryProvider>
+          <NextTopLoader
+            color="#0084ff"
+            showSpinner={true}
+            zIndex={99_999_999}
+          />
           {children}
           <Toaster />{" "}
           <footer className="w-full bg-black flex items-center relative z-[1] justify-center text-white text-center p-2">
