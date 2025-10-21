@@ -258,7 +258,9 @@ const AdminOnlinePage = () => {
               </SelectTrigger>
               <SelectContent>
                 {devices
-                  .filter((device) => device.deviceId && device.deviceId.trim() !== "")
+                  .filter(
+                    (device) => device.deviceId && device.deviceId.trim() !== ""
+                  )
                   .map((device) => (
                     <SelectItem key={device.deviceId} value={device.deviceId}>
                       {device.label || `Camera ${device.deviceId}`}
@@ -269,10 +271,7 @@ const AdminOnlinePage = () => {
           </div>
 
           <div className="relative">
-            <div
-              className="w-full max-w-[500px] aspect-square mx-auto border-4 border-slate-200 rounded-2xl overflow-hidden shadow-inner bg-slate-900 relative"
-              style={{ transform: "scaleX(-1)" }}
-            >
+            <div className="w-full max-w-[500px] aspect-square mx-auto border-4 border-slate-200 rounded-2xl overflow-hidden shadow-inner bg-slate-900 relative">
               {showScanner && (
                 <Scanner
                   key={scannerKey}
