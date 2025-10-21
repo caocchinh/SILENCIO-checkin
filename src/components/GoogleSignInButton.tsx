@@ -57,7 +57,7 @@ export function GoogleSignInButton() {
           <span>Đăng nhập bằng Google</span>
         </>
       </Button>
-      {error && <span className="text-red-500">{error}</span>}
+      {error && <span className="text-red-500 text-center">{error}</span>}
     </div>
   );
 }
