@@ -15,3 +15,10 @@ export const ADMIN_NAVIGATION_ITEMS = [
     path: "/admin/traditional",
   },
 ];
+
+// Admin PIN for enhanced security (change this to your desired PIN)
+export const ADMIN_PIN = "123456";
+
+// PIN verification settings
+export const PIN_VERIFICATION_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
+export const PIN_SESSION_KEY = "admin_pin_verified";
