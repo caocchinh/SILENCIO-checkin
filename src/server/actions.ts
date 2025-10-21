@@ -8,9 +8,10 @@ import {
   createActionSuccess,
   type ActionResponse,
 } from "@/constants/errors";
-import { retryDatabase } from "@/dal/retry";
+import { retryDatabase, retryExternalApi } from "@/dal/retry";
 import { verifySession } from "@/dal/verifySession";
 import { CustomerInfo } from "@/constants/types";
+import { getServerAblyClient, CHANNELS, EVENT_NAMES } from "@/lib/ably";
 
 export async function getCustomerInfoBySession({
   sessionId,
@@ -167,6 +168,25 @@ export async function checkInUser({
           .where(eq(customer.studentId, customerId)),
       "update customer check-in status"
     );
+
+    // Publish real-time update to Ably with exponential backoff retry
+    try {
+      await retryExternalApi(
+        async () => {
+          const ablyClient = getServerAblyClient();
+          const channel = ablyClient.channels.get(CHANNELS.CUSTOMER_UPDATES);
+          await channel.publish(EVENT_NAMES.CHECKED_IN, {
+            studentId: customerId,
+            hasCheckedIn: true,
+          });
+        },
+        `publish check-in to Ably for ${customerId}`
+      );
+      console.log("Published check-in update to Ably for:", customerId);
+    } catch (ablyError) {
+      console.error("Error publishing to Ably after retries:", ablyError);
+      // Don't fail the check-in if Ably publish fails
+    }
 
     return createActionSuccess<{ hasCheckedIn: boolean }>({
       hasCheckedIn: true,

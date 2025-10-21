@@ -7,5 +7,7 @@ namespace NodeJS {
     NEON_DATABASE_URL: string;
     OAUTH_GOOGLE_CLIENT_SECRET: string;
     OAUTH_GOOGLE_CLIENT_ID: string;
+    ABLY_API_KEY: string;
+    NEXT_PUBLIC_ABLY_KEY: string;
   }
 }

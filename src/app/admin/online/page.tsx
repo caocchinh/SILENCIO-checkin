@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { useDevices } from "@yudiel/react-qr-scanner";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCustomerInfoBySession, checkInUser } from "@/server/actions";
 import {
@@ -21,10 +21,11 @@ import {
   Home,
   Ticket,
   QrCode,
-  Users,
   IdCardLanyard,
   UserRoundCheck,
   Loader2,
+  GhostIcon,
+  ListOrdered,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ERROR_CODES, getErrorMessage } from "@/constants/errors";
@@ -43,6 +44,9 @@ import {
 import { errorToast, successToast } from "@/lib/utils";
 import useSound from "use-sound";
 import { Scanner } from "@yudiel/react-qr-scanner";
+import { useAblyChannel } from "@/hooks/useAblyChannel";
+import { CHANNELS, CustomerUpdateMessage, EVENT_NAMES } from "@/lib/ably";
+import { AllCustomerInfoResponse } from "@/constants/types";
 
 const AdminOnlinePage = () => {
   const devices = useDevices();
@@ -106,16 +110,6 @@ const AdminOnlinePage = () => {
     onSuccess: () => {
       // Update the cached customer info with new check-in status
       setIsCheckInConfirmDialogOpen(false);
-      queryClient.setQueryData(
-        ["customerInfo", scannedData + key],
-        (oldData: typeof customerResponse) => {
-          if (!oldData) return oldData;
-          return {
-            ...oldData,
-            hasCheckedIn: true,
-          };
-        }
-      );
       successToast({
         message: "Thành công",
         description: "Khách hàng đã được check in thành công",
@@ -163,6 +157,74 @@ const AdminOnlinePage = () => {
       setShowScanner(false);
     };
   }, [scannerKey]);
+
+  const handleAblyMessage = useCallback(
+    (message: CustomerUpdateMessage) => {
+      console.log("Received Ably message:", message);
+      if (message.type === EVENT_NAMES.CHECKED_IN && message.data?.studentId) {
+        if (message.data.studentId === customerResponse?.studentId) {
+          queryClient.setQueryData(
+            ["customerInfo", scannedData + key],
+            (oldData: typeof customerResponse) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                hasCheckedIn: true,
+              };
+            }
+          );
+        }
+        if (
+          message.data.studentId === customerResponse?.studentId &&
+          !isFetching &&
+          !customerResponse.hasCheckedIn
+        ) {
+          setIsCheckInConfirmDialogOpen(false);
+          setIsCustomerAlreadyCheckedInError(true);
+          errorToast({
+            message: "Chú ý!",
+            description: "Khách hàng đã check in rồi.",
+          });
+        }
+        // Update React Query cache with the checked-in customer
+        queryClient.setQueryData(
+          ["allCustomerInfo"],
+          (oldData: AllCustomerInfoResponse | undefined) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              customers: oldData.customers.map((customer) => {
+                if (customer.studentId === message.data?.studentId) {
+                  return {
+                    ...customer,
+                    hasCheckedIn: true,
+                  };
+                }
+                return customer;
+              }),
+            };
+          }
+        );
+      } else if (message.type === "refresh_all") {
+        // Refetch all data
+        queryClient.invalidateQueries({ queryKey: ["allCustomerInfo"] });
+      }
+    },
+    [
+      customerResponse?.hasCheckedIn,
+      customerResponse?.studentId,
+      isFetching,
+      key,
+      queryClient,
+      scannedData,
+    ]
+  );
+
+  // Initialize Ably connection
+  const { isConnected, connectionState } = useAblyChannel({
+    channelName: CHANNELS.CUSTOMER_UPDATES,
+    onMessage: handleAblyMessage,
+  });
 
   return (
     <div className="min-h-screen flex items-center justify-center w-full  p-2 md:p-4">
@@ -506,11 +568,12 @@ const AdminOnlinePage = () => {
                             ]
                           }
                           alt={customerResponse.ticketType}
+                          className="rounded-sm"
                         />
                       </div>
 
                       <div className="flex items-start gap-3">
-                        <Home className="w-5 h-5 text-slate-600 mt-0.5" />
+                        <GhostIcon className="w-5 h-5 text-slate-600 mt-0.5" />
                         <div className="flex-1">
                           <p className="text-xs text-slate-500 font-medium">
                             Nhà ma
@@ -524,7 +587,7 @@ const AdminOnlinePage = () => {
                       </div>
 
                       <div className="flex items-start gap-3">
-                        <Users className="w-5 h-5 text-slate-600 mt-0.5" />
+                        <ListOrdered className="w-5 h-5 text-slate-600 mt-0.5" />
                         <div className="flex-1">
                           <p className="text-xs text-slate-500 font-medium">
                             Lượt đi nhà ma
@@ -547,9 +610,9 @@ const AdminOnlinePage = () => {
                             </p>
                             <p className="text-sm font-medium text-slate-700">
                               {customerResponse.queueStartTime
-                                ? customerResponse.queueStartTime.toLocaleString(
-                                    "vi-VN"
-                                  )
+                                ? new Date(
+                                    customerResponse.queueStartTime
+                                  ).toLocaleString("vi-VN")
                                 : "Không có"}
                             </p>
                           </div>
@@ -563,9 +626,9 @@ const AdminOnlinePage = () => {
                             </p>
                             <p className="text-sm font-medium text-slate-700">
                               {customerResponse.queueEndTime
-                                ? customerResponse.queueEndTime.toLocaleString(
-                                    "vi-VN"
-                                  )
+                                ? new Date(
+                                    customerResponse.queueEndTime
+                                  ).toLocaleString("vi-VN")
                                 : "Không có"}
                             </p>
                           </div>

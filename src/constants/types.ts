@@ -13,3 +13,8 @@ export interface CustomerInfo {
   queueStartTime: Date | null;
   queueEndTime: Date | null;
 }
+
+export interface AllCustomerInfoResponse {
+  customers: CustomerInfo[];
+  total: number;
+}
