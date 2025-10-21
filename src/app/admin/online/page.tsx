@@ -257,11 +257,13 @@ const AdminOnlinePage = () => {
                 <SelectValue placeholder="Select a camera device" />
               </SelectTrigger>
               <SelectContent>
-                {devices.map((device) => (
-                  <SelectItem key={device.deviceId} value={device.deviceId}>
-                    {device.label || `Camera ${device.deviceId}`}
-                  </SelectItem>
-                ))}
+                {devices
+                  .filter((device) => device.deviceId && device.deviceId.trim() !== "")
+                  .map((device) => (
+                    <SelectItem key={device.deviceId} value={device.deviceId}>
+                      {device.label || `Camera ${device.deviceId}`}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
