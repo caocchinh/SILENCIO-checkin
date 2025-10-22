@@ -57,7 +57,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getErrorMessage } from "@/constants/errors";
+import { ERROR_CODES, getErrorMessage } from "@/constants/errors";
 
 const AdminTraditionalPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -109,9 +109,12 @@ const AdminTraditionalPage = () => {
         if (
           message.data.studentId === chosenCustomer?.studentId &&
           !checkInMutation.isPending &&
-          !chosenCustomer?.hasCheckedIn
+          !chosenCustomer?.hasCheckedIn &&
+          isCheckInConfirmDialogOpen
         ) {
-          setIsCheckInConfirmDialogOpen(false);
+          setErrorMessage(
+            getErrorMessage(ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN)
+          );
           setChosenCustomer(null);
           errorToast({
             message: "Chú ý!",
@@ -129,6 +132,7 @@ const AdminTraditionalPage = () => {
       checkInMutation.isPending,
       chosenCustomer?.hasCheckedIn,
       chosenCustomer?.studentId,
+      isCheckInConfirmDialogOpen,
       queryClient,
     ]
   );
