@@ -115,7 +115,6 @@ const AdminTraditionalPage = () => {
           setErrorMessage(
             getErrorMessage(ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN)
           );
-          setChosenCustomer(null);
           errorToast({
             message: "Chú ý!",
             description: "Khách hàng đã check in rồi.",
