@@ -81,14 +81,15 @@ const AdminTraditionalPage = () => {
       return result.data;
     },
     onSuccess: () => {
-      // No need to manually update cache - Ably will push the update automatically
       successToast({
         message: "Thành công!",
         description: "Khách hàng đã được check in.",
       });
       setIsCheckInConfirmDialogOpen(false);
+      if (chosenCustomer?.studentId) {
+        updateAllCustomersCheckInStatus(queryClient, chosenCustomer.studentId);
+      }
       setChosenCustomer(null);
-      setCurrentAccordionItem("");
     },
     onError: (error: Error) => {
       const message = getErrorMessage(
@@ -107,11 +108,11 @@ const AdminTraditionalPage = () => {
       if (message.type === EVENT_NAMES.CHECKED_IN && message.data?.studentId) {
         if (
           message.data.studentId === chosenCustomer?.studentId &&
-          !checkInMutation.isPending
+          !checkInMutation.isPending &&
+          !chosenCustomer?.hasCheckedIn
         ) {
           setIsCheckInConfirmDialogOpen(false);
           setChosenCustomer(null);
-          setCurrentAccordionItem("");
           errorToast({
             message: "Chú ý!",
             description: "Khách hàng đã check in rồi.",
@@ -124,7 +125,12 @@ const AdminTraditionalPage = () => {
         queryClient.invalidateQueries({ queryKey: ["allCustomerInfo"] });
       }
     },
-    [checkInMutation.isPending, chosenCustomer?.studentId, queryClient]
+    [
+      checkInMutation.isPending,
+      chosenCustomer?.hasCheckedIn,
+      chosenCustomer?.studentId,
+      queryClient,
+    ]
   );
 
   // Initialize Ably connection
@@ -154,7 +160,7 @@ const AdminTraditionalPage = () => {
   });
 
   // Fuzzy search filter
-  const filteredCustomers = useMemo(() => {
+  const filteredCustomers = useMemo((): CustomerInfo[] => {
     if (!customerData?.customers) return [];
     if (!searchQuery.trim()) return customerData.customers;
 
@@ -174,11 +180,43 @@ const AdminTraditionalPage = () => {
     });
   }, [customerData?.customers, searchQuery]);
 
-  const handleCheckIn = () => {
-    if (chosenCustomer) {
-      checkInMutation.mutate(chosenCustomer.studentId);
-    }
-  };
+  // Memoized customer data formatting to avoid recalculation on every render
+  const formattedCustomers = useMemo((): (CustomerInfo & {
+    formattedStartTime: string;
+    formattedEndTime: string;
+    ticketImage: string;
+  })[] => {
+    if (!filteredCustomers) return [];
+
+    return filteredCustomers.map((customer: CustomerInfo) => {
+      const startTime = customer.queueStartTime
+        ? new Date(customer.queueStartTime).toLocaleString("vi-VN")
+        : "Không có";
+      const endTime = customer.queueEndTime
+        ? new Date(customer.queueEndTime).toLocaleString("vi-VN")
+        : "Không có";
+      const ticketImage =
+        TICKET_IMAGE[
+          customer.ticketType.toLowerCase() as keyof typeof TICKET_IMAGE
+        ];
+
+      return {
+        ...customer,
+        formattedStartTime: startTime,
+        formattedEndTime: endTime,
+        ticketImage,
+      };
+    });
+  }, [filteredCustomers]);
+
+  const handleCheckIn = useCallback((customer: CustomerInfo) => {
+    setIsCheckInConfirmDialogOpen(true);
+    setChosenCustomer(customer);
+  }, []);
+
+  const handleAccordionValueChange = useCallback((value: string) => {
+    setCurrentAccordionItem(value);
+  }, []);
 
   return (
     <>
@@ -321,18 +359,18 @@ const AdminTraditionalPage = () => {
                       collapsible
                       className="w-full"
                       value={currentAccordionItem}
-                      onValueChange={setCurrentAccordionItem}
+                      onValueChange={handleAccordionValueChange}
                     >
-                      {filteredCustomers.map((order, orderIndex) => {
+                      {formattedCustomers.map((customer, orderIndex) => {
                         return (
                           <AccordionItem
-                            key={`${order.studentId}-${orderIndex}`}
-                            value={order.studentId}
+                            key={customer.studentId}
+                            value={customer.studentId}
                           >
                             <AccordionTrigger
                               className={cn(
                                 "cursor-pointer mx-2",
-                                currentAccordionItem === order.studentId &&
+                                currentAccordionItem === customer.studentId &&
                                   "text-[#0084ff]"
                               )}
                             >
@@ -342,9 +380,9 @@ const AdminTraditionalPage = () => {
                                   <div className="text-left flex items-center gap-2 flex-wrap">
                                     <div>
                                       {" "}
-                                      {order.name} - {order.studentId}{" "}
+                                      {customer.name} - {customer.studentId}{" "}
                                     </div>
-                                    {order.hasCheckedIn ? (
+                                    {customer.hasCheckedIn ? (
                                       <p className="px-2 py-1 bg-green-100 w-max text-green-800 rounded-full text-md font-semibold">
                                         ✓ Đã check-in
                                       </p>
@@ -357,156 +395,143 @@ const AdminTraditionalPage = () => {
                                 </div>
                               </div>
                             </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="border border-[#0084ff] rounded-lg p-3  bg-muted/30">
-                                {/* Customer Information */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                  <div className="space-y-2">
-                                    <div className="flex items-start gap-2">
-                                      <User className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                      <div className="flex-1">
-                                        <div className="text-md text-muted-foreground">
-                                          Tên
+                            {currentAccordionItem === customer.studentId && (
+                              <AccordionContent>
+                                <div className="border border-[#0084ff] rounded-lg p-3 bg-muted/30">
+                                  {/* Customer Information */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="space-y-2">
+                                      <div className="flex items-start gap-2">
+                                        <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                        <div className="flex-1">
+                                          <div className="text-md text-muted-foreground">
+                                            Tên
+                                          </div>
+                                          <div className="font-medium">
+                                            {customer.name}
+                                          </div>
                                         </div>
-                                        <div className="font-medium">
-                                          {order.name}
+                                      </div>
+                                      <div className="flex items-start gap-2">
+                                        <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                        <div className="flex-1">
+                                          <div className="text-md text-muted-foreground">
+                                            Lớp
+                                          </div>
+                                          <div className="font-medium">
+                                            {customer.homeroom}
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
-                                    <div className="flex items-start gap-2">
-                                      <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                      <div className="flex-1">
-                                        <div className="text-md text-muted-foreground">
-                                          Lớp
+                                    <div className="space-y-2">
+                                      <div className="flex items-start gap-2">
+                                        <Receipt className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                        <div className="flex-1">
+                                          <div className="text-md text-muted-foreground">
+                                            Mã học sinh
+                                          </div>
+                                          <div className="font-medium font-mono">
+                                            {customer.studentId}
+                                          </div>
                                         </div>
-                                        <div className="font-medium">
-                                          {order.homeroom}
+                                      </div>
+                                      <div className="flex items-start gap-2">
+                                        <Mail className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                        <div className="flex-1">
+                                          <div className="text-md text-muted-foreground">
+                                            Email
+                                          </div>
+                                          <div className="font-medium text-sm break-all">
+                                            {customer.email}
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="space-y-2">
-                                    <div className="flex items-start gap-2">
-                                      <Receipt className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                      <div className="flex-1">
-                                        <div className="text-md text-muted-foreground">
-                                          Mã học sinh
-                                        </div>
-                                        <div className="font-medium font-mono">
-                                          {order.studentId}
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-start gap-2">
-                                      <Mail className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                      <div className="flex-1">
-                                        <div className="text-md text-muted-foreground">
-                                          Email
-                                        </div>
-                                        <div className="font-medium text-sm break-all">
-                                          {order.email}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
 
-                                {/* Notice and Email Status */}
-                                <>
-                                  <Separator className="mx-2" />
-                                  <div className="space-y-2">
-                                    <div className="flex items-start gap-2">
-                                      <Ticket className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                      <div className="flex-1">
-                                        <div className="text-md text-muted-foreground">
-                                          Hạng vé:{" "}
-                                          <span className="text-black font-semibold">
-                                            {order.ticketType}
+                                  {/* Notice and Email Status */}
+                                  <>
+                                    <Separator className="mx-2" />
+                                    <div className="space-y-2">
+                                      <div className="flex items-start gap-2">
+                                        <Ticket className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                        <div className="flex-1">
+                                          <div className="text-md text-muted-foreground">
+                                            Hạng vé:{" "}
+                                            <span className="text-black font-semibold">
+                                              {customer.ticketType}
+                                            </span>
+                                            <img
+                                              src={customer.ticketImage}
+                                              alt={customer.ticketType}
+                                              className="rounded-sm mt-1"
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <GhostIcon className="h-4 w-4 text-muted-foreground" />
+                                        <div className="text-md">
+                                          <span className="text-muted-foreground">
+                                            Nhà ma:{" "}
                                           </span>
-                                          <img
-                                            src={
-                                              TICKET_IMAGE[
-                                                order.ticketType.toLowerCase() as keyof typeof TICKET_IMAGE
-                                              ]
-                                            }
-                                            alt={order.ticketType}
-                                            className="rounded-sm mt-1"
-                                          />
+                                          <span className="font-semibold">
+                                            {customer.hauntedHouseName
+                                              ? customer.hauntedHouseName
+                                              : "Không có"}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <ListOrdered className="h-4 w-4 text-muted-foreground" />
+                                        <div className="text-md">
+                                          <span className="text-muted-foreground">
+                                            Lượt :{" "}
+                                          </span>
+                                          <span className="font-semibold text-[#0084ff] ">
+                                            #
+                                            {customer.queueNumber
+                                              ? customer.queueNumber
+                                              : "Không có"}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <ListOrdered className="h-4 w-4 text-muted-foreground" />
+                                        <div className="text-md">
+                                          <span className="text-muted-foreground">
+                                            Nhà ma bắt đầu lúc:{" "}
+                                          </span>
+                                          <span className="font-semibold">
+                                            {customer.formattedStartTime}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <ListOrdered className="h-4 w-4 text-muted-foreground" />
+                                        <div className="text-md">
+                                          <span className="text-muted-foreground">
+                                            Nhà ma kết thúc lúc:{" "}
+                                          </span>
+                                          <span className="font-semibold">
+                                            {customer.formattedEndTime}
+                                          </span>
                                         </div>
                                       </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                      <GhostIcon className="h-4 w-4 text-muted-foreground" />
-                                      <div className="text-md">
-                                        <span className="text-muted-foreground">
-                                          Nhà ma:{" "}
-                                        </span>
-                                        <span className="font-semibold">
-                                          {order.hauntedHouseName
-                                            ? order.hauntedHouseName
-                                            : "Không có"}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <ListOrdered className="h-4 w-4 text-muted-foreground" />
-                                      <div className="text-md">
-                                        <span className="text-muted-foreground">
-                                          Lượt :{" "}
-                                        </span>
-                                        <span className="font-semibold text-[#0084ff] ">
-                                          #
-                                          {order.queueNumber
-                                            ? order.queueNumber
-                                            : "Không có"}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <ListOrdered className="h-4 w-4 text-muted-foreground" />
-                                      <div className="text-md">
-                                        <span className="text-muted-foreground">
-                                          Nhà ma bắt đầu lúc:{" "}
-                                        </span>
-                                        <span className="font-semibold">
-                                          {order.queueStartTime
-                                            ? new Date(
-                                                order.queueStartTime
-                                              ).toLocaleString("vi-VN")
-                                            : "Không có"}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <ListOrdered className="h-4 w-4 text-muted-foreground" />
-                                      <div className="text-md">
-                                        <span className="text-muted-foreground">
-                                          Nhà ma kết thúc lúc:{" "}
-                                        </span>
-                                        <span className="font-semibold">
-                                          {order.queueEndTime
-                                            ? new Date(
-                                                order.queueEndTime
-                                              ).toLocaleString("vi-VN")
-                                            : "Không có"}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </>
-                                {!order.hasCheckedIn && (
-                                  <Button
-                                    className="w-full mt-2 cursor-pointer"
-                                    onClick={() => {
-                                      setIsCheckInConfirmDialogOpen(true);
-                                      setChosenCustomer(order);
-                                    }}
-                                  >
-                                    Check in <UserCheck />
-                                  </Button>
-                                )}
-                              </div>
-                            </AccordionContent>
+                                  </>
+                                  {!customer.hasCheckedIn && (
+                                    <Button
+                                      className="w-full mt-2 cursor-pointer"
+                                      onClick={() => handleCheckIn(customer)}
+                                    >
+                                      Check in <UserCheck />
+                                    </Button>
+                                  )}
+                                </div>
+                              </AccordionContent>
+                            )}
                           </AccordionItem>
                         );
                       })}
@@ -571,7 +596,10 @@ const AdminTraditionalPage = () => {
               Hủy
             </AlertDialogCancel>
             <Button
-              onClick={handleCheckIn}
+              onClick={() =>
+                chosenCustomer &&
+                checkInMutation.mutate(chosenCustomer.studentId)
+              }
               disabled={checkInMutation.isPending}
               className="cursor-pointer"
             >
