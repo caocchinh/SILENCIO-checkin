@@ -2,7 +2,7 @@
 
 import { db } from "@/drizzle/db";
 import { session, customer, user } from "@/drizzle/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   createActionError,
   createActionSuccess,
@@ -138,38 +138,43 @@ export async function checkInUserAction({
       return createActionError("INVALID_INPUT", "Customer ID is required");
     }
 
-    // Get customer from database
-    const customerRecord = await retryDatabase(
-      () =>
-        db.query.customer.findFirst({
-          where: eq(customer.studentId, customerId),
-        }),
-      "fetch customer by ID"
-    );
+    // Run database operations in parallel
+    const [existingCustomer, result] = await Promise.all([
+      retryDatabase(
+        () =>
+          db.query.customer.findFirst({
+            where: eq(customer.studentId, customerId),
+          }),
+        "check if customer exists"
+      ),
+      retryDatabase(
+        () =>
+          db
+            .update(customer)
+            .set({
+              hasCheckedIn: true,
+            })
+            .where(
+              and(
+                eq(customer.studentId, customerId),
+                eq(customer.hasCheckedIn, false)
+              )
+            ),
+        "update customer check-in status"
+      ),
+    ]);
 
-    if (!customerRecord) {
+    // Sequential validation logic
+    if (!existingCustomer) {
       return createActionError("NOT_FOUND", "Customer not found");
     }
 
-    // Check if already checked in
-    if (customerRecord.hasCheckedIn) {
+    if (result.rowCount === 0) {
       return createActionError(
         "CUSTOMER_ALREADY_CHECKED_IN",
         "Customer has already checked in"
       );
     }
-
-    // Update check-in status
-    await retryDatabase(
-      () =>
-        db
-          .update(customer)
-          .set({
-            hasCheckedIn: true,
-          })
-          .where(eq(customer.studentId, customerId)),
-      "update customer check-in status"
-    );
 
     // Publish real-time update to Ably with exponential backoff retry
     try {

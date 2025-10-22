@@ -70,12 +70,12 @@ const AdminTraditionalPage = () => {
     null
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
   const queryClient = useQueryClient();
 
   // Check-in mutation
   const checkInMutation = useMutation({
     mutationFn: async (customerId: string) => {
+      setErrorMessage(null);
       const result = await checkInUserAction({ customerId });
       if (!result.success) {
         throw new Error(result.code || "Failed to check in customer");
@@ -107,7 +107,9 @@ const AdminTraditionalPage = () => {
           }
         }
       }
-      setErrorMessage(message);
+      if (error.message !== ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN) {
+        setErrorMessage(message);
+      }
       errorToast({
         message: message,
       });
@@ -124,9 +126,6 @@ const AdminTraditionalPage = () => {
           !chosenCustomer?.hasCheckedIn &&
           isCheckInConfirmDialogOpen
         ) {
-          setErrorMessage(
-            getErrorMessage(ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN)
-          );
           errorToast({
             message: "Chú ý!",
             description: getErrorMessage(
@@ -175,6 +174,10 @@ const AdminTraditionalPage = () => {
     },
     refetchInterval: 60000, // Auto-refresh every 2 minutes
   });
+
+  const isAlreadyCheckedInError = customerData?.customers.find(
+    (customer) => customer.studentId === chosenCustomer?.studentId
+  )?.hasCheckedIn;
 
   // Fuzzy search filter
   const filteredCustomers = useMemo((): CustomerInfo[] => {
@@ -582,7 +585,9 @@ const AdminTraditionalPage = () => {
         open={isCheckInConfirmDialogOpen}
         onOpenChange={(e) => {
           setIsCheckInConfirmDialogOpen(e);
-          setErrorMessage(null);
+          if (!e) {
+            setChosenCustomer(null);
+          }
         }}
       >
         <AlertDialogContent>
@@ -601,9 +606,15 @@ const AdminTraditionalPage = () => {
               ?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {errorMessage && (
+          {isAlreadyCheckedInError && !checkInMutation.isPending && (
+            <div className="text-red-500 text-center">
+              {getErrorMessage(ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN)}
+            </div>
+          )}
+          {errorMessage && !isAlreadyCheckedInError && (
             <div className="text-red-500 text-center">{errorMessage}</div>
           )}
+
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={checkInMutation.isPending}
@@ -616,12 +627,7 @@ const AdminTraditionalPage = () => {
                 chosenCustomer &&
                 checkInMutation.mutate(chosenCustomer.studentId)
               }
-              disabled={
-                checkInMutation.isPending ||
-                customerData?.customers.find(
-                  (customer) => customer.studentId === chosenCustomer?.studentId
-                )?.hasCheckedIn
-              }
+              disabled={checkInMutation.isPending || isAlreadyCheckedInError}
               className="cursor-pointer"
             >
               {checkInMutation.isPending ? (
