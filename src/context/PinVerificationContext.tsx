@@ -19,7 +19,7 @@ interface PinVerificationContextType {
   isVerified: boolean;
   isLoading: boolean;
   error: string | null;
-  verifyPin: (pin: string) => Promise<void>;
+  verifyPin: (pin: string) => Promise<{ correctPin: boolean }>;
   clearAdminStatus: () => Promise<void>;
   lockScreen: () => void;
   clearError: () => void;
@@ -84,28 +84,33 @@ export const PinVerificationProvider: React.FC<
   }, []);
 
   // Verify PIN
-  const verifyPin = useCallback(async (pin: string): Promise<void> => {
-    try {
-      const result = await verifyAdminPinAction({ pin });
+  const verifyPin = useCallback(
+    async (pin: string): Promise<{ correctPin: boolean }> => {
+      try {
+        const result = await verifyAdminPinAction({ pin });
 
-      if (result.success) {
-        setIsVerified(true);
-        setError(null);
-        lastActivityRef.current = Date.now();
-      } else {
-        // Handle specific error responses
-        const errorMessage = result.code || ERROR_CODES.INTERNAL_SERVER_ERROR;
-        setError(getErrorMessage(errorMessage));
+        if (result.success) {
+          setIsVerified(true);
+          setError(null);
+          lastActivityRef.current = Date.now();
+        } else {
+          // Handle specific error responses
+          const errorMessage = result.code || ERROR_CODES.INTERNAL_SERVER_ERROR;
+          setError(getErrorMessage(errorMessage));
+        }
+        return { correctPin: result.success };
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
+        );
+        setIsVerified(false);
+        return { correctPin: false };
       }
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
-      );
-      setIsVerified(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   // Clear verification
   const clearAdminStatus = useCallback(async () => {

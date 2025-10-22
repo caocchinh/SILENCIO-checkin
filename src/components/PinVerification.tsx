@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { usePinVerification } from "@/context/PinVerificationContext";
-import { Lock, AlertCircle, RefreshCw, WifiOff } from "lucide-react";
+import { Lock, RefreshCw, WifiOff } from "lucide-react";
 import { motion } from "motion/react";
 import {
   InputOTP,
@@ -26,49 +26,56 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
     clearError,
   } = usePinVerification();
   const [pin, setPin] = useState<string>("");
-  const [localError, setLocalError] = useState<string>("");
-  const firstSlotRef = useRef<HTMLInputElement>(null);
+  const otpInputRef = useRef<HTMLInputElement>(null);
+
+  // Find the actual input element after component mounts
+  useEffect(() => {
+    const findInput = () => {
+      const currentElement = otpInputRef.current;
+      if (currentElement) {
+        // The input-otp library might create a hidden input
+        const input = currentElement.querySelector("input");
+        if (input && input instanceof HTMLInputElement) {
+          otpInputRef.current = input;
+        }
+      }
+    };
+    // Try to find the input immediately and after a short delay
+    findInput();
+    const timeoutId = setTimeout(findInput, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   const verifyPinMutation = useMutation({
     mutationFn: async (pinString: string) => {
-      await verifyPin(pinString);
-    },
-    onSuccess: () => {
-      setPin("");
+      const { correctPin } = await verifyPin(pinString);
+      if (!correctPin) {
+        throw new Error();
+      }
     },
     onError: () => {
-      setPin("");
       setTimeout(() => {
-        firstSlotRef.current?.focus();
-      }, 1000);
+        otpInputRef.current?.focus();
+      }, 0);
+    },
+    onSettled: () => {
+      setPin("");
     },
     onMutate: () => {
-      setLocalError("");
       clearError();
     },
   });
 
-  const displayError = localError || contextError;
-
   useEffect(() => {
     if (pin.length > 0) {
-      setLocalError("");
       clearError();
     }
   }, [pin, clearError]);
 
-  const handleRetry = () => {
-    setLocalError("");
-    clearError();
-    setPin("");
-    setTimeout(() => {
-      firstSlotRef.current?.focus();
-    }, 0);
-  };
-
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="flex h-[calc(100vh-40px)] w-full items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
           <p className="text-gray-600">Đang xác thực</p>
@@ -103,29 +110,30 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
 
   if (!isVerified) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="flex h-[calc(100vh-40px)]  w-full items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
-          className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl"
+          className="w-full max-w-md rounded-2xl bg-white p-8 shadow border "
         >
           <div className="mb-8 flex flex-col items-center gap-4">
             <div className="rounded-full bg-blue-100 p-4">
-              <Lock className="h-8 w-8 text-blue-600" />
+              <Lock className="h-8 w-8 text-[#0084ff]" />
             </div>
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900">
                 Xác thực staff
               </h2>
               <p className="mt-2 text-sm text-gray-600">
-                Nhập mã PIN để truy hệ thống
+                Nhập mã PIN để truy cập hệ thống
               </p>
             </div>
           </div>
 
           <div className="mb-6 flex justify-center">
             <InputOTP
+              ref={otpInputRef}
               maxLength={6}
               value={pin}
               onChange={(e) => {
@@ -142,9 +150,8 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
                   <InputOTPSlot
                     key={index}
                     index={index}
-                    ref={index === 0 ? firstSlotRef : null}
                     className={`h-14 w-12 text-xl font-semibold ${
-                      displayError ? "border-red-300 bg-red-50" : ""
+                      contextError ? "border-red-300 bg-red-50" : ""
                     }`}
                   />
                 ))}
@@ -152,32 +159,14 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
             </InputOTP>
           </div>
 
-          {displayError && (
+          {contextError && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-4"
             >
               <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                {displayError.includes("kết nối") ||
-                displayError.includes("máy chủ") ? (
-                  <WifiOff className="h-5 w-5 flex-shrink-0" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                )}
-                <div className="flex-1">
-                  <span>{displayError}</span>
-                  {(displayError.includes("kết nối") ||
-                    displayError.includes("máy chủ")) && (
-                    <button
-                      onClick={handleRetry}
-                      className="mt-2 flex items-center gap-1 text-xs font-medium text-red-700 hover:text-red-800"
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                      Thử lại
-                    </button>
-                  )}
-                </div>
+                <span>{contextError}</span>
               </div>
             </motion.div>
           )}

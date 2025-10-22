@@ -12,13 +12,23 @@ import {
   ROLE_USER,
 } from "./permission";
 import { admin } from "better-auth/plugins";
+import { createAuthMiddleware } from "better-auth/api";
+import { clearAdminStatusAction } from "@/server/actions";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/sign-out") {
+        await clearAdminStatusAction();
+      }
+    }),
+  },
   plugins: [
     multiSession(),
+
     admin({
       ac,
       roles: {
