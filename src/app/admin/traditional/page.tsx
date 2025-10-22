@@ -19,6 +19,7 @@ import {
   UserCheck,
   Wifi,
   WifiOff,
+  Clock,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useState, useMemo, useCallback } from "react";
@@ -95,6 +96,16 @@ const AdminTraditionalPage = () => {
       const message = getErrorMessage(
         error.message || "Không thể check in khách hàng."
       );
+      if (error instanceof Error) {
+        if (error.message === ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN) {
+          if (chosenCustomer?.studentId) {
+            updateAllCustomersCheckInStatus(
+              queryClient,
+              chosenCustomer.studentId
+            );
+          }
+        }
+      }
       setErrorMessage(message);
       errorToast({
         message: message,
@@ -117,7 +128,9 @@ const AdminTraditionalPage = () => {
           );
           errorToast({
             message: "Chú ý!",
-            description: "Khách hàng đã check in rồi.",
+            description: getErrorMessage(
+              ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN
+            ),
           });
         }
         // Update React Query cache with the checked-in customer
@@ -455,7 +468,7 @@ const AdminTraditionalPage = () => {
 
                                   {/* Notice and Email Status */}
                                   <>
-                                    <Separator className="mx-2" />
+                                    <Separator className="m-2" />
                                     <div className="space-y-2">
                                       <div className="flex items-start gap-2">
                                         <Ticket className="h-4 w-4 text-muted-foreground mt-0.5" />
@@ -501,7 +514,7 @@ const AdminTraditionalPage = () => {
                                         </div>
                                       </div>
                                       <div className="flex items-center gap-2">
-                                        <ListOrdered className="h-4 w-4 text-muted-foreground" />
+                                        <Clock className="h-4 w-4 text-muted-foreground" />
                                         <div className="text-md">
                                           <span className="text-muted-foreground">
                                             Nhà ma bắt đầu lúc:{" "}
@@ -512,7 +525,7 @@ const AdminTraditionalPage = () => {
                                         </div>
                                       </div>
                                       <div className="flex items-center gap-2">
-                                        <ListOrdered className="h-4 w-4 text-muted-foreground" />
+                                        <Clock className="h-4 w-4 text-muted-foreground" />
                                         <div className="text-md">
                                           <span className="text-muted-foreground">
                                             Nhà ma kết thúc lúc:{" "}
@@ -590,7 +603,9 @@ const AdminTraditionalPage = () => {
               ?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {errorMessage && <div className="text-red-500">{errorMessage}</div>}
+          {errorMessage && (
+            <div className="text-red-500 text-center">{errorMessage}</div>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={checkInMutation.isPending}
@@ -603,17 +618,22 @@ const AdminTraditionalPage = () => {
                 chosenCustomer &&
                 checkInMutation.mutate(chosenCustomer.studentId)
               }
-              disabled={checkInMutation.isPending}
+              disabled={
+                checkInMutation.isPending ||
+                customerData?.customers.find(
+                  (customer) => customer.studentId === chosenCustomer?.studentId
+                )?.hasCheckedIn
+              }
               className="cursor-pointer"
             >
               {checkInMutation.isPending ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Đang check in...
                 </>
               ) : (
                 <>
-                  <UserCheck className="w-4 h-4 mr-2" />
+                  <UserCheck className="w-4 h-4" />
                   Xác nhận
                 </>
               )}

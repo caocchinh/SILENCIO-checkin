@@ -156,28 +156,23 @@ export const PinVerificationProvider: React.FC<
     lastActivityRef.current = Date.now();
   }, []);
 
-  // Handle visibility change (tab switch/leave)
+  // Periodic check every minute when verified
   useEffect(() => {
-    const handleVisibilityChange = async () => {
-      if (isVerified) {
-        if (document.hidden) {
-          // Tab is hidden or user left the page
-          await clearAdminStatus();
-        } else {
-          // Tab is visible again, check PIN status
-          await checkPinStatus();
-        }
-      }
-    };
+    let interval: NodeJS.Timeout | null = null;
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    if (isVerified) {
+      interval = setInterval(() => {
+        checkPinStatus();
+      }, 60000);
+    }
 
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (interval) {
+        clearInterval(interval);
+      }
     };
-  }, [clearAdminStatus, checkPinStatus, isVerified]);
+  }, [isVerified, checkPinStatus]);
 
-  // Initial check on mount
   useEffect(() => {
     checkPinStatus();
   }, [checkPinStatus]);
@@ -208,15 +203,52 @@ export const PinVerificationProvider: React.FC<
   // Handle page unload
   useEffect(() => {
     const handleBeforeUnload = () => {
-      clearAdminStatus();
+      // Use sendBeacon for reliable data sending during page unload
+      try {
+        const url = "/api/admin/clear-status";
+        const data = JSON.stringify({});
+
+        // sendBeacon is more reliable than fetch during page unload
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(url, data);
+        } else {
+          // Fallback to fetch if sendBeacon is not available
+          fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: data,
+            keepalive: true, // Keep the request alive during page unload
+          }).catch(console.error);
+        }
+      } catch (error) {
+        console.error("Error clearing admin status on beforeunload:", error);
+      }
+    };
+
+    const handleUnload = () => {
+      // Additional attempt using sendBeacon for unload event
+      try {
+        const url = "/api/admin/clear-status";
+        const data = JSON.stringify({});
+
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(url, data);
+        }
+      } catch (error) {
+        console.error("Error clearing admin status on unload:", error);
+      }
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("unload", handleUnload);
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("unload", handleUnload);
     };
-  }, [clearAdminStatus]);
+  }, []);
 
   const value: PinVerificationContextType = {
     isVerified,

@@ -182,8 +182,7 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
           <div className="mt-6 rounded-lg bg-blue-50 p-4">
             <p className="text-center text-xs text-gray-600">
               <span className="font-semibold">Lưu ý:</span> Vì bảo mật, bạn sẽ
-              cần nhập lại mã PIN khi chuyển tab hoặc sau 5 phút không hoạt
-              động.
+              cần nhập lại mã PIN khi tắt tab hoặc sau 5 phút không hoạt động.
             </p>
           </div>
           <div className="mt-6 w-full">
