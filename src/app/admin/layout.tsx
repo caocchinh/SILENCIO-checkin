@@ -48,6 +48,7 @@ const AdminContent = async ({ children }: { children: React.ReactNode }) => {
 
   return (
     <PinVerificationProvider>
+      <ActivityTimer />
       <PinVerification>
         <div className="flex w-full flex-col items-start justify-center p-4">
           <div className="flex w-full flex-col items-start justify-start gap-2 border-gray-600 border-b pb-4 md:flex-row md:items-center md:gap-8">
@@ -58,7 +59,6 @@ const AdminContent = async ({ children }: { children: React.ReactNode }) => {
                   Hệ thống check in
                 </h1>
                 <h3 className="text-gray-500 text-sm">{session.user.email}</h3>
-                <ActivityTimer />
               </div>
               <div className="flex items-center gap-2 w-full sm:w-max">
                 <LockButton />

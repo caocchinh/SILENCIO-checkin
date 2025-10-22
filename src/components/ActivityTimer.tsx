@@ -37,7 +37,7 @@ export const ActivityTimer = () => {
   const seconds = Math.floor((timeSinceLastActivity % (1000 * 60)) / 1000);
 
   return (
-    <div className="flex items-center justify-center gap-2">
+    <div className="flex items-center justify-center gap-2 absolute top-0 right-0">
       <span
         className={`${
           timeSinceLastActivity >= PIN_VERIFICATION_INTERVAL * 0.5
