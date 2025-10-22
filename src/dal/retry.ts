@@ -37,6 +37,13 @@ export const RETRY_CONFIGS = {
     backoffMultiplier: 2,
     jitterRange: 500,
   },
+  COOKIES: {
+    maxRetries: 2,
+    baseDelay: 200,
+    maxDelay: 800,
+    backoffMultiplier: 2,
+    jitterRange: 100,
+  },
 } as const;
 
 /**
@@ -167,3 +174,14 @@ export function retryExternalApi<T>(
 ): Promise<T> {
   return retryWithBackoff(operation, RETRY_CONFIGS.EXTERNAL_API, operationName);
 }
+
+/**
+ * Convenience function for cookie operations
+ */
+export function retryCookies<T>(
+  operation: () => Promise<T>,
+  operationName: string = "cookie operation"
+): Promise<T> {
+  return retryWithBackoff(operation, RETRY_CONFIGS.COOKIES, operationName);
+}
+

@@ -17,7 +17,7 @@ import { ERROR_CODES, getErrorMessage } from "@/constants/errors";
 
 interface PinVerificationContextType {
   isVerified: boolean;
-  isLoading: boolean;
+  isPending: boolean;
   error: string | null;
   verifyPin: (pin: string) => Promise<{ correctPin: boolean }>;
   clearAdminStatus: () => Promise<void>;
@@ -48,14 +48,13 @@ export const PinVerificationProvider: React.FC<
   PinVerificationProviderProps
 > = ({ children }) => {
   const [isVerified, setIsVerified] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isPending, setIsPending] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
 
   // Check PIN verification status from server
   const checkPinStatus = useCallback(async () => {
     try {
-      setIsLoading(true);
       const result = await checkPinStatusAction();
 
       if (!result.success) {
@@ -64,7 +63,6 @@ export const PinVerificationProvider: React.FC<
         setIsVerified(false);
         return;
       }
-
       if (result.data?.verified) {
         setIsVerified(true);
       } else {
@@ -79,7 +77,7 @@ export const PinVerificationProvider: React.FC<
       );
       setIsVerified(false);
     } finally {
-      setIsLoading(false);
+      setIsPending(false);
     }
   }, []);
 
@@ -252,7 +250,7 @@ export const PinVerificationProvider: React.FC<
 
   const value: PinVerificationContextType = {
     isVerified,
-    isLoading,
+    isPending,
     error,
     verifyPin,
     clearAdminStatus,

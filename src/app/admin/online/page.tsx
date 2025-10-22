@@ -4,7 +4,7 @@ import { useDevices } from "@yudiel/react-qr-scanner";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useSound from "use-sound";
-import { getCustomerInfoBySession, checkInUser } from "@/server/actions";
+import { getCustomerInfoBySession, checkInUserAction } from "@/server/actions";
 import {
   Select,
   SelectContent,
@@ -112,7 +112,7 @@ const AdminOnlinePage = () => {
   // Mutation for checking in user
   const checkInMutation = useMutation({
     mutationFn: async (customerId: string) => {
-      const response = await checkInUser({ customerId });
+      const response = await checkInUserAction({ customerId });
       if (response.success) {
         return response.data;
       } else {

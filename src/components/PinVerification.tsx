@@ -21,7 +21,7 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
 }) => {
   const {
     isVerified,
-    isLoading,
+    isPending,
     error: contextError,
     verifyPin,
     clearError,
@@ -63,9 +63,6 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
     onSettled: () => {
       setPin("");
     },
-    onMutate: () => {
-      clearError();
-    },
   });
 
   useEffect(() => {
@@ -74,7 +71,7 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
     }
   }, [pin, clearError]);
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="flex h-[calc(100vh-40px)] w-full items-center justify-center">
         <div className="flex flex-col items-center gap-4">

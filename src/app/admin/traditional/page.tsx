@@ -48,7 +48,7 @@ import {
 } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { TICKET_IMAGE } from "@/constants/constants";
-import { checkInUser } from "@/server/actions";
+import { checkInUserAction } from "@/server/actions";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -59,6 +59,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ERROR_CODES, getErrorMessage } from "@/constants/errors";
+import Loader from "@/components/Loader/Loader";
 
 const AdminTraditionalPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,7 +76,7 @@ const AdminTraditionalPage = () => {
   // Check-in mutation
   const checkInMutation = useMutation({
     mutationFn: async (customerId: string) => {
-      const result = await checkInUser({ customerId });
+      const result = await checkInUserAction({ customerId });
       if (!result.success) {
         throw new Error(result.code || "Failed to check in customer");
       }
@@ -237,9 +238,9 @@ const AdminTraditionalPage = () => {
   return (
     <>
       <div className="min-h-screen w-full p-4">
-        <div className=" flex items-start gap-4 justify-center flex-wrap">
+        <div className=" flex items-start gap-3 justify-center flex-wrap">
           {/* Header */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-4 border border-slate-200 min-w-[90%] sm:min-w-[400px] max-w-[450px] flex-1">
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-4 border border-slate-200 min-w-[90%] sm:min-w-[400px] max-w-6xl flex-1">
             <div className="flex items-center sm:items-start justify-between sm:flex-row flex-col gap-4">
               <div className="flex items-start gap-3 justify-start">
                 <div>
@@ -331,10 +332,7 @@ const AdminTraditionalPage = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <Loader2 className="w-12 h-12 text-[#0084ff] animate-spin mb-4" />
-              <p className="text-slate-600 font-medium">
-                Đang tải thông tin khách hàng...
-              </p>
+              <Loader loadingText="Đang tải thông tin khách hàng" />
             </motion.div>
           ) : error ? (
             <motion.div
@@ -357,7 +355,7 @@ const AdminTraditionalPage = () => {
             </motion.div>
           ) : filteredCustomers.length > 0 ? (
             <motion.div
-              className="bg-white relative rounded-xl shadow-lg border border-slate-200 overflow-hidden max-w-7xl flex-1 w-[90%] min-w-[90%] sm:min-w-[700px]"
+              className="bg-white relative rounded-xl shadow-lg border border-slate-200 overflow-hidden max-w-6xl flex-2 w-[90%] min-w-[90%] sm:min-w-[620px]"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >

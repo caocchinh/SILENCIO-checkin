@@ -8,7 +8,7 @@ import {
   createActionSuccess,
   type ActionResponse,
 } from "@/constants/errors";
-import { retryDatabase, retryExternalApi } from "@/dal/retry";
+import { retryDatabase, retryExternalApi, retryCookies } from "@/dal/retry";
 import { verifySession } from "@/dal/verifySession";
 import { CustomerInfo } from "@/constants/types";
 import { getServerAblyClient, CHANNELS, EVENT_NAMES } from "@/lib/ably";
@@ -119,7 +119,7 @@ export async function getCustomerInfoBySession({
   }
 }
 
-export async function checkInUser({
+export async function checkInUserAction({
   customerId,
 }: {
   customerId: string;
@@ -216,8 +216,10 @@ export async function checkPinStatusAction(): Promise<
     }
 
     // Check if PIN verification cookie exists
-    const cookieStore = await cookies();
-    const pinVerifiedCookie = cookieStore.get("admin_pin_verified");
+    const pinVerifiedCookie = await retryCookies(async () => {
+      const cookieStore = await cookies();
+      return cookieStore.get("admin_pin_verified");
+    }, "get admin PIN verification cookie");
 
     if (!pinVerifiedCookie) {
       return createActionSuccess<{ verified: boolean }>({ verified: false });
@@ -259,14 +261,16 @@ export async function verifyAdminPinAction({
     // Verify the PIN
     if (pin === ADMIN_PIN) {
       // Set a secure cookie with the PIN verification timestamp
-      const cookieStore = await cookies();
-      cookieStore.set("admin_pin_verified", Date.now().toString(), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 2, // 2 hours
-        path: "/",
-      });
+      await retryCookies(async () => {
+        const cookieStore = await cookies();
+        cookieStore.set("admin_pin_verified", Date.now().toString(), {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 2, // 2 hours
+          path: "/",
+        });
+      }, "set admin PIN verification cookie");
 
       return createActionSuccess();
     } else {
@@ -280,8 +284,22 @@ export async function verifyAdminPinAction({
 
 export async function clearAdminStatusAction(): Promise<ActionResponse> {
   try {
-    const cookieStore = await cookies();
-    cookieStore.delete("admin_pin_verified");
+    // Verify admin session
+    const functionInvokerSession = await verifySession();
+    if (
+      !functionInvokerSession ||
+      functionInvokerSession.user.role !== "admin"
+    ) {
+      return createActionError(
+        "SESSION_VERIFICATION_FAILED",
+        "Session verification failed"
+      );
+    }
+
+    await retryCookies(async () => {
+      const cookieStore = await cookies();
+      cookieStore.delete("admin_pin_verified");
+    }, "delete admin PIN verification cookie");
 
     return createActionSuccess();
   } catch (error) {
