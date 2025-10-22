@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { toast } from "sonner";
+import { QueryClient } from '@tanstack/react-query';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -112,4 +113,60 @@ export const errorToast = ({
     },
   });
   return toastId;
+};
+
+/**
+ * Updates a single customer's check-in status in the React Query cache
+ * @param queryClient - The React Query client instance
+ * @param queryKey - The query key for the customer info (e.g., ["customerInfo", sessionId])
+ * @param updater - Optional function to modify the query data before updating check-in status
+ */
+export const updateCustomerCheckInStatus = <T extends { hasCheckedIn: boolean }>(
+  queryClient: QueryClient,
+  queryKey: readonly unknown[],
+  updater?: (oldData: T | undefined) => T | undefined
+) => {
+  queryClient.setQueryData<T>(queryKey, (oldData) => {
+    if (!oldData) return oldData;
+
+    const updatedData = updater ? updater(oldData) : oldData;
+    if (!updatedData) return oldData;
+
+    return {
+      ...updatedData,
+      hasCheckedIn: true,
+    };
+  });
+};
+
+/**
+ * Updates a customer's check-in status in the all customers list cache
+ * @param queryClient - The React Query client instance
+ * @param studentId - The student ID of the customer to update
+ * @param updater - Optional function to modify the query data before updating check-in status
+ */
+export const updateAllCustomersCheckInStatus = <T extends { customers: Array<{ studentId: string; hasCheckedIn: boolean }> }>(
+  queryClient: QueryClient,
+  studentId: string,
+  updater?: (oldData: T | undefined) => T | undefined
+) => {
+  queryClient.setQueryData<T>(["allCustomerInfo"], (oldData) => {
+    if (!oldData) return oldData;
+
+    const updatedData = updater ? updater(oldData) : oldData;
+    if (!updatedData) return oldData;
+
+    return {
+      ...updatedData,
+      customers: updatedData.customers.map((customer) => {
+        if (customer.studentId === studentId) {
+          return {
+            ...customer,
+            hasCheckedIn: true,
+          };
+        }
+        return customer;
+      }),
+    };
+  });
 };

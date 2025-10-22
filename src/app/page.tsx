@@ -34,8 +34,8 @@ export default async function HomePage({ searchParams }: HomeProps) {
     if (session.session.user.role === "admin") {
       return (
         <RedirectMessage
-          message="Redirecting to Admin Dashboard..."
-          subMessage="Please wait..."
+          message="Đang chuyển hướng đến hệ thống check-in"
+          subMessage="Vui lòng chờ trong giây lát..."
           redirectTo="/admin"
         />
       );

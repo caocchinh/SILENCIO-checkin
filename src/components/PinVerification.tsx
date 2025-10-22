@@ -10,6 +10,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { LogoutButton } from "./LogoutButton";
 
 interface PinVerificationProps {
   children: React.ReactNode;
@@ -184,6 +185,9 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
               cần nhập lại mã PIN khi chuyển tab hoặc sau 5 phút không hoạt
               động.
             </p>
+          </div>
+          <div className="mt-6 w-full">
+            <LogoutButton className="sm:w-full" />
           </div>
         </motion.div>
       </div>

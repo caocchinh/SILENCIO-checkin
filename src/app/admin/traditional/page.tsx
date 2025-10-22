@@ -26,7 +26,12 @@ import { useAblyChannel } from "@/hooks/useAblyChannel";
 import { CHANNELS, EVENT_NAMES, type CustomerUpdateMessage } from "@/lib/ably";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { cn, errorToast, successToast } from "@/lib/utils";
+import {
+  cn,
+  errorToast,
+  successToast,
+  updateAllCustomersCheckInStatus,
+} from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
   Tooltip,
@@ -99,8 +104,6 @@ const AdminTraditionalPage = () => {
   // Ably real-time message handler
   const handleAblyMessage = useCallback(
     (message: CustomerUpdateMessage) => {
-      console.log("Received Ably message:", message);
-
       if (message.type === EVENT_NAMES.CHECKED_IN && message.data?.studentId) {
         if (
           message.data.studentId === chosenCustomer?.studentId &&
@@ -115,24 +118,7 @@ const AdminTraditionalPage = () => {
           });
         }
         // Update React Query cache with the checked-in customer
-        queryClient.setQueryData(
-          ["allCustomerInfo"],
-          (oldData: AllCustomerInfoResponse | undefined) => {
-            if (!oldData) return oldData;
-            return {
-              ...oldData,
-              customers: oldData.customers.map((customer) => {
-                if (customer.studentId === message.data?.studentId) {
-                  return {
-                    ...customer,
-                    hasCheckedIn: true,
-                  };
-                }
-                return customer;
-              }),
-            };
-          }
-        );
+        updateAllCustomersCheckInStatus(queryClient, message.data?.studentId);
       } else if (message.type === "refresh_all") {
         // Refetch all data
         queryClient.invalidateQueries({ queryKey: ["allCustomerInfo"] });

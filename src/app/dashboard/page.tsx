@@ -102,10 +102,10 @@ export default async function DashboardPage() {
         <div className=" absolute top-[46%] left-1/2 -translate-x-1/2 -translate-y-[40%] flex items-center justify-center flex-col min-w-[250px] w-[70%]">
           {ticketIncludeHauntedHouse && (
             <div className="flex flex-col gap-2 mb-2 text-2xl -mt-10 text-center">
-              <p className="text-[#FFD700]">
+              <p className="text-red-500">
                 Nhà ma: {customerQueueSpot?.queue?.hauntedHouseName}
               </p>
-              <p className="text-[#FFD700]">
+              <p className="text-red-500">
                 Lượt: {customerQueueSpot?.queue?.queueNumber} (Từ{" "}
                 {customerQueueSpot?.queue?.queueStartTime.toLocaleTimeString(
                   [],
@@ -127,13 +127,18 @@ export default async function DashboardPage() {
           )}
           <h1
             className={cn(
-              "text-[#FFD700] login_title text-[33px] font-semibold text-center  ",
+              "text-[#FFD700] login_title text-[33px] font-semibold text-center -mt-2 ",
               !ticketIncludeHauntedHouse && "mb-2 -mt-10"
             )}
           >
             Đưa mã QR này cho staff
           </h1>
           <QR url={session.session.session.id} />
+          {ticketIncludeHauntedHouse && (
+            <p className="text-red-500 text-xl mt-[6px] text-center">
+              Xin bạn vui lòng đến sớm lượt nhà ma của mình 10 phút
+            </p>
+          )}
         </div>
         <Image
           src="/assets/frame.png"

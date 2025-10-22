@@ -52,7 +52,7 @@ const AdminContent = async ({ children }: { children: React.ReactNode }) => {
         <div className="flex w-full flex-col items-start justify-center p-4">
           <div className="flex w-full flex-col items-start justify-start gap-2 border-gray-600 border-b pb-4 md:flex-row md:items-center md:gap-8">
             <div className="flex items-center justify-center gap-4 flex-col sm:flex-row w-full sm:w-max">
-              <div className="flex w-max flex-col items-start justify-center gap-2">
+              <div className="flex w-full sm:w-max flex-col items-start justify-center gap-2">
                 {" "}
                 <h1 className="w-full font-semibold text-3xl text-[#0084ff]">
                   Hệ thống check in
@@ -60,9 +60,9 @@ const AdminContent = async ({ children }: { children: React.ReactNode }) => {
                 <h3 className="text-gray-500 text-sm">{session.user.email}</h3>
                 <ActivityTimer />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full sm:w-max">
                 <LockButton />
-                <LogoutButton />
+                <LogoutButton className="flex-1 sm:w-max" />
               </div>
             </div>
 

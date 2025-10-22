@@ -16,8 +16,9 @@ import {
 } from "./ui/alert-dialog";
 import { errorToast } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export function LogoutButton() {
+export function LogoutButton({ className }: { className?: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -42,7 +43,10 @@ export function LogoutButton() {
       <AlertDialogTrigger asChild>
         <Button
           variant="outline"
-          className="flex items-center gap-2 text-sm cursor-pointer sm:w-auto w-full"
+          className={cn(
+            "flex items-center gap-2 text-sm cursor-pointer sm:w-auto w-full",
+            className
+          )}
         >
           <svg
             className="w-4 h-4"

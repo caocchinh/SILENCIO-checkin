@@ -17,7 +17,7 @@ const italianno = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "VTEAM - Check-im Silencio",
+  title: "VTEAM - Check-in Silencio",
   description: "Check-in cho sự kiện Silencio",
 };
 

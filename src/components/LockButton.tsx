@@ -14,7 +14,7 @@ export const LockButton: React.FC = () => {
       variant={"outline"}
       aria-label="Khóa màn hình"
       title="Khóa màn hình"
-      className="cursor-pointer"
+      className="cursor-pointer flex-1 sm:w-max"
     >
       <Lock className="h-4 w-4" />
       Khóa

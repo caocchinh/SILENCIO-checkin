@@ -7,9 +7,13 @@ type UseAblyChannelOptions = {
   onMessage?: (message: CustomerUpdateMessage) => void;
 };
 
-export function useAblyChannel({ channelName, onMessage }: UseAblyChannelOptions) {
+export function useAblyChannel({
+  channelName,
+  onMessage,
+}: UseAblyChannelOptions) {
   const [isConnected, setIsConnected] = useState(false);
-  const [connectionState, setConnectionState] = useState<Ably.ConnectionState>("initialized");
+  const [connectionState, setConnectionState] =
+    useState<Ably.ConnectionState>("initialized");
   const [channel, setChannel] = useState<Ably.RealtimeChannel | null>(null);
 
   useEffect(() => {
@@ -22,10 +26,11 @@ export function useAblyChannel({ channelName, onMessage }: UseAblyChannelOptions
       setChannel(ablyChannel);
 
       // Monitor connection state
-      const handleConnectionStateChange = (stateChange: Ably.ConnectionStateChange) => {
+      const handleConnectionStateChange = (
+        stateChange: Ably.ConnectionStateChange
+      ) => {
         setConnectionState(stateChange.current);
         setIsConnected(stateChange.current === "connected");
-        console.log("Ably connection state changed:", stateChange.current);
       };
 
       ablyClient.connection.on(handleConnectionStateChange);

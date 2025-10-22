@@ -17,7 +17,7 @@ export const ADMIN_NAVIGATION_ITEMS = [
 ];
 
 // Admin PIN for enhanced security (change this to your desired PIN)
-export const ADMIN_PIN = "123456";
+export const ADMIN_PIN = "694200";
 
 // PIN verification settings
 export const PIN_VERIFICATION_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds

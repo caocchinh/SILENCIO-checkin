@@ -3,6 +3,7 @@
 import { useDevices } from "@yudiel/react-qr-scanner";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import useSound from "use-sound";
 import { getCustomerInfoBySession, checkInUser } from "@/server/actions";
 import {
   Select,
@@ -49,12 +50,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { errorToast, successToast } from "@/lib/utils";
-import useSound from "use-sound";
+import {
+  errorToast,
+  successToast,
+  updateCustomerCheckInStatus,
+  updateAllCustomersCheckInStatus,
+} from "@/lib/utils";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { useAblyChannel } from "@/hooks/useAblyChannel";
 import { CHANNELS, CustomerUpdateMessage, EVENT_NAMES } from "@/lib/ably";
-import { AllCustomerInfoResponse } from "@/constants/types";
 
 const AdminOnlinePage = () => {
   const devices = useDevices();
@@ -118,6 +122,10 @@ const AdminOnlinePage = () => {
     onSuccess: () => {
       // Update the cached customer info with new check-in status
       setIsCheckInConfirmDialogOpen(false);
+      updateCustomerCheckInStatus(queryClient, [
+        "customerInfo",
+        scannedData + key,
+      ]);
       successToast({
         message: "Thành công",
         description: "Khách hàng đã được check in thành công",
@@ -128,16 +136,10 @@ const AdminOnlinePage = () => {
         if (error.message === ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN) {
           setIsCustomerAlreadyCheckedInError(true);
           setIsCheckInConfirmDialogOpen(false);
-          queryClient.setQueryData(
-            ["customerInfo", scannedData + key],
-            (oldData: typeof customerResponse) => {
-              if (!oldData) return oldData;
-              return {
-                ...oldData,
-                hasCheckedIn: true,
-              };
-            }
-          );
+          updateCustomerCheckInStatus(queryClient, [
+            "customerInfo",
+            scannedData + key,
+          ]);
         }
         errorToast({
           message: "Thất bại",
@@ -167,25 +169,13 @@ const AdminOnlinePage = () => {
   }, [scannerKey]);
 
   const handleAblyMessage = useCallback(
-    (message: CustomerUpdateMessage) => {
-      console.log("Received Ably message:", message);
+    async (message: CustomerUpdateMessage) => {
       if (message.type === EVENT_NAMES.CHECKED_IN && message.data?.studentId) {
-        if (message.data.studentId === customerResponse?.studentId) {
-          queryClient.setQueryData(
-            ["customerInfo", scannedData + key],
-            (oldData: typeof customerResponse) => {
-              if (!oldData) return oldData;
-              return {
-                ...oldData,
-                hasCheckedIn: true,
-              };
-            }
-          );
-        }
         if (
           message.data.studentId === customerResponse?.studentId &&
           !isFetching &&
-          !customerResponse.hasCheckedIn
+          !customerResponse.hasCheckedIn &&
+          !checkInMutation.isPending
         ) {
           setIsCheckInConfirmDialogOpen(false);
           setIsCustomerAlreadyCheckedInError(true);
@@ -195,30 +185,18 @@ const AdminOnlinePage = () => {
           });
         }
         // Update React Query cache with the checked-in customer
-        queryClient.setQueryData(
-          ["allCustomerInfo"],
-          (oldData: AllCustomerInfoResponse | undefined) => {
-            if (!oldData) return oldData;
-            return {
-              ...oldData,
-              customers: oldData.customers.map((customer) => {
-                if (customer.studentId === message.data?.studentId) {
-                  return {
-                    ...customer,
-                    hasCheckedIn: true,
-                  };
-                }
-                return customer;
-              }),
-            };
-          }
-        );
+        updateCustomerCheckInStatus(queryClient, [
+          "customerInfo",
+          scannedData + key,
+        ]);
+        updateAllCustomersCheckInStatus(queryClient, message.data?.studentId);
       } else if (message.type === "refresh_all") {
         // Refetch all data
         queryClient.invalidateQueries({ queryKey: ["allCustomerInfo"] });
       }
     },
     [
+      checkInMutation.isPending,
       customerResponse?.hasCheckedIn,
       customerResponse?.studentId,
       isFetching,
