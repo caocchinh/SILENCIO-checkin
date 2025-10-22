@@ -243,11 +243,11 @@ const AdminTraditionalPage = () => {
       <div className="min-h-screen w-full p-4">
         <div className=" flex items-start gap-3 justify-center flex-wrap">
           {/* Header */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-4 border border-slate-200 min-w-[90%] sm:min-w-[400px] max-w-6xl flex-1">
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-4 border border-slate-200 min-w-[90%] sm:min-w-[440px] max-w-6xl flex-1">
             <div className="flex items-center sm:items-start justify-between sm:flex-row flex-col gap-4">
               <div className="flex items-start gap-3 justify-start">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-4">
                     <h1 className="text-2xl font-bold text-slate-900">
                       Dữ liệu khách hàng
                     </h1>
@@ -276,24 +276,29 @@ const AdminTraditionalPage = () => {
                       </Tooltip>
                     </TooltipProvider>
                   </div>
-                  <div className="text-sm text-slate-500 text-center sm:text-left">
+                  <div className="text-sm text-slate-500 text-center flex flex-col items-start sm:text-left">
                     {customerData ? (
                       searchQuery ? (
                         `${filteredCustomers.length} / ${customerData.total} khách hàng`
                       ) : (
-                        <div className="flex-col flex items-start justify-center gap-1">
-                          <span> Tổng số: {customerData.total} khách hàng</span>
-                          <span>
-                            Khách hàng đã check in:{" "}
-                            {
-                              customerData.customers.filter(
-                                (customer) => customer.hasCheckedIn
-                              ).length
-                            }
+                        <div className="flex-col flex items-start justify-center gap-1 text-left">
+                          <span className="w-full">
+                            {" "}
+                            Tổng số: {customerData.total} khách hàng
                           </span>
                         </div>
                       )
                     ) : null}
+                    {customerData && (
+                      <span className="w-full text-left">
+                        Khách hàng đã check in:{" "}
+                        {
+                          customerData.customers.filter(
+                            (customer) => customer.hasCheckedIn
+                          ).length
+                        }
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
