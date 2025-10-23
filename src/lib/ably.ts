@@ -10,6 +10,14 @@ export function getServerAblyClient(): Ably.Realtime {
     }
     serverAblyInstance = new Ably.Realtime({
       key: process.env.ABLY_API_KEY,
+      autoConnect: true,
+      disconnectedRetryTimeout: 5000, // 5 seconds
+      suspendedRetryTimeout: 5000, // 5 seconds
+      // Enable connection recovery to restore connection state
+      recover: function (_lastConnectionDetails, callback) {
+        // Use Ably's default recovery mechanism
+        callback(true);
+      },
     });
   }
   return serverAblyInstance;
@@ -29,6 +37,14 @@ export function getClientAblyClient(): Ably.Realtime {
     }
     clientAblyInstance = new Ably.Realtime({
       key: process.env.NEXT_PUBLIC_ABLY_KEY,
+      autoConnect: true,
+      disconnectedRetryTimeout: 5000, // 5 seconds
+      suspendedRetryTimeout: 5000, // 5 seconds
+      // Enable connection recovery to restore connection state
+      recover: function (_lastConnectionDetails, callback) {
+        // Use Ably's default recovery mechanism
+        callback(true);
+      },
     });
   }
   return clientAblyInstance;

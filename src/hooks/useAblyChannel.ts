@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import type * as Ably from "ably";
 import { getClientAblyClient, type CustomerUpdateMessage } from "@/lib/ably";
 
@@ -14,7 +14,6 @@ export function useAblyChannel({
   const [isConnected, setIsConnected] = useState(false);
   const [connectionState, setConnectionState] =
     useState<Ably.ConnectionState>("initialized");
-  const [channel, setChannel] = useState<Ably.RealtimeChannel | null>(null);
 
   useEffect(() => {
     let ablyClient: Ably.Realtime | null = null;
@@ -23,7 +22,6 @@ export function useAblyChannel({
     try {
       ablyClient = getClientAblyClient();
       ablyChannel = ablyClient.channels.get(channelName);
-      setChannel(ablyChannel);
 
       // Monitor connection state
       const handleConnectionStateChange = (
@@ -67,20 +65,8 @@ export function useAblyChannel({
     }
   }, [channelName, onMessage]);
 
-  const publish = useCallback(
-    (message: CustomerUpdateMessage) => {
-      if (channel) {
-        channel.publish("update", message);
-      } else {
-        console.warn("Cannot publish: Ably channel not initialized");
-      }
-    },
-    [channel]
-  );
-
   return {
     isConnected,
     connectionState,
-    publish,
   };
 }

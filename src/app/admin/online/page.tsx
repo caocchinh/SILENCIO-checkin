@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { useDevices } from "@yudiel/react-qr-scanner";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useSound from "use-sound";
 import { getCustomerInfoBySession, checkInUserAction } from "@/server/actions";
@@ -78,6 +78,13 @@ const AdminOnlinePage = () => {
   const [isCustomerAlreadyCheckedInError, setIsCustomerAlreadyCheckedInError] =
     useState(false);
   const isCheckInConfirmDialogOpenRef = useRef(isCheckInConfirmDialogOpen);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsMounted(true);
+    }, 0);
+  }, []);
 
   useEffect(() => {
     isCheckInConfirmDialogOpenRef.current = isCheckInConfirmDialogOpen;
@@ -149,18 +156,29 @@ const AdminOnlinePage = () => {
     },
   });
 
-  // Load selected device from localStorage on mount
+  // Load selected device from localStorage on mount or select the first device available
   useEffect(() => {
-    const savedDevice = localStorage.getItem("admin-scanner-device");
-    if (savedDevice) {
-      setSelectedDevice(savedDevice);
+    if (isMounted && typeof window !== "undefined" && devices.length > 0) {
+      const savedDevice = localStorage.getItem("admin-scanner-device");
+      const availableDeviceIds = devices
+        .filter((device) => device.deviceId && device.deviceId.trim() !== "")
+        .map((device) => device.deviceId);
+
+      if (savedDevice && availableDeviceIds.includes(savedDevice)) {
+        setSelectedDevice(savedDevice);
+      } else {
+        // If saved device doesn't exist or is not available, use the first available device
+        const firstDevice = availableDeviceIds[0];
+        setSelectedDevice(firstDevice);
+        localStorage.setItem("admin-scanner-device", firstDevice);
+      }
     }
-  }, []);
+  }, [isMounted, devices]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowScanner(true);
-    }, 1000);
+    }, 1111);
 
     return () => {
       clearTimeout(timer);
@@ -225,8 +243,10 @@ const AdminOnlinePage = () => {
             </label>
             <Select
               onValueChange={(value) => {
-                setSelectedDevice(value);
-                localStorage.setItem("admin-scanner-device", value);
+                if (value) {
+                  setSelectedDevice(value);
+                  localStorage.setItem("admin-scanner-device", value);
+                }
                 setScannerKey((prev) => prev + 1);
               }}
               value={selectedDevice}
