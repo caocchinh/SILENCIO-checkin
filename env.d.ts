@@ -9,5 +9,6 @@ namespace NodeJS {
     OAUTH_GOOGLE_CLIENT_ID: string;
     ABLY_API_KEY: string;
     NEXT_PUBLIC_ABLY_KEY: string;
+    ADMIN_PIN: string;
   }
 }

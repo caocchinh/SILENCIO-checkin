@@ -12,7 +12,6 @@ import { retryDatabase, retryExternalApi, retryCookies } from "@/dal/retry";
 import { verifySession } from "@/dal/verifySession";
 import { CustomerInfo } from "@/constants/types";
 import { getServerAblyClient, CHANNELS, EVENT_NAMES } from "@/lib/ably";
-import { ADMIN_PIN } from "@/constants/constants";
 import { cookies } from "next/headers";
 
 export async function getCustomerInfoBySession({
@@ -264,7 +263,7 @@ export async function verifyAdminPinAction({
     }
 
     // Verify the PIN
-    if (pin === ADMIN_PIN) {
+    if (pin === process.env.ADMIN_PIN) {
       // Set a secure cookie with the PIN verification timestamp
       await retryCookies(async () => {
         const cookieStore = await cookies();
