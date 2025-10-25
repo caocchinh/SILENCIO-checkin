@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/drizzle/db";
-import { session, customer, user } from "@/drizzle/schema";
+import { session, customer } from "@/drizzle/schema";
 import { and, eq } from "drizzle-orm";
 import {
   createActionError,
@@ -19,13 +19,29 @@ export async function getCustomerInfoBySession({
 }: {
   sessionId: string;
 }): Promise<ActionResponse<CustomerInfo>> {
-  const functionInvokerSession = await verifySession();
+  // Run session verification and database query in parallel
+  const [functionInvokerSession, sessionRecord] = await Promise.all([
+    verifySession(),
+    retryDatabase(
+      () =>
+        db.query.session.findFirst({
+          where: eq(session.id, sessionId),
+          with: {
+            user: true,
+          },
+        }),
+      "fetch session by ID"
+    ),
+  ]);
+
+  // Check function invoker session
   if (!functionInvokerSession || functionInvokerSession.user.role !== "admin") {
     return createActionError(
       "SESSION_VERIFICATION_FAILED",
       "Session verification failed"
     );
   }
+
   try {
     // Validate input
     if (!sessionId || sessionId.trim() === "") {
@@ -40,15 +56,7 @@ export async function getCustomerInfoBySession({
       );
     }
 
-    // Get session from database
-    const sessionRecord = await retryDatabase(
-      () =>
-        db.query.session.findFirst({
-          where: eq(session.id, sessionId),
-        }),
-      "fetch session by ID"
-    );
-
+    // Check session record from database
     if (!sessionRecord) {
       return createActionError("CUSTOMER_SESSION_EXPIRED", "Session not found");
     }
@@ -61,16 +69,7 @@ export async function getCustomerInfoBySession({
       );
     }
 
-    // Get user from session
-    const userRecord = await retryDatabase(
-      () =>
-        db.query.user.findFirst({
-          where: eq(user.id, sessionRecord.userId),
-        }),
-      "fetch user by ID"
-    );
-
-    if (!userRecord) {
+    if (!sessionRecord.user) {
       return createActionError("NOT_FOUND", "User not found");
     }
 
@@ -78,7 +77,7 @@ export async function getCustomerInfoBySession({
     const customerRecord = await retryDatabase(
       () =>
         db.query.customer.findFirst({
-          where: eq(customer.email, userRecord.email),
+          where: eq(customer.email, sessionRecord.user.email),
           with: {
             queueSpots: {
               with: {
