@@ -255,14 +255,8 @@ export const sessionRelations = relations(session, ({ one }) => ({
     fields: [session.userId],
     references: [user.id],
   }),
-  impersonatedBy: one(user, {
-    fields: [session.impersonatedBy],
-    references: [user.id],
-  }),
 }));
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
-  accounts: many(account),
-  impersonatedSessions: many(session),
 }));
