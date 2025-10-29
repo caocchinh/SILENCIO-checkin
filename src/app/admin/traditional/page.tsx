@@ -216,9 +216,7 @@ const AdminTraditionalPage = () => {
         ? new Date(customer.queueEndTime).toLocaleString("vi-VN")
         : "Không có";
       const ticketImage =
-        TICKET_IMAGE[
-          customer.ticketType.toLowerCase() as keyof typeof TICKET_IMAGE
-        ];
+        TICKET_IMAGE[customer.ticketType as keyof typeof TICKET_IMAGE];
 
       return {
         ...customer,

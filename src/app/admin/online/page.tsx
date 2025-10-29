@@ -597,7 +597,7 @@ const AdminOnlinePage = () => {
                         <img
                           src={
                             TICKET_IMAGE[
-                              customerResponse.ticketType.toLowerCase() as keyof typeof TICKET_IMAGE
+                              customerResponse.ticketType as keyof typeof TICKET_IMAGE
                             ]
                           }
                           alt={customerResponse.ticketType}

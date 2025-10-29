@@ -195,6 +195,9 @@ export const customer = pgTable("customer", {
   hasCheckedIn: boolean("has_checked_in")
     .$defaultFn(() => false)
     .notNull(),
+  hasSentConfirmationEmail: boolean("has_sent_confirmation_email")
+    .notNull()
+    .default(false),
 });
 
 // Drizzle relations for better querying

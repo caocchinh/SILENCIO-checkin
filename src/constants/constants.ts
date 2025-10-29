@@ -1,8 +1,11 @@
 export const TICKET_IMAGE = {
-  tamer: "/assets/tamer.webp",
-  ringmaster: "/assets/ringmaster.webp",
-  juggler: "/assets/juggler.webp",
-  jester: "/assets/jester.webp",
+  Tamer: "/assets/tamer.webp",
+  Ringmaster: "/assets/ringmaster.webp",
+  Juggler: "/assets/juggler.webp",
+  Jester: "/assets/jester.webp",
+  "Jester - Vé CTV": "/assets/jester.webp",
+  "Juggler - The Phlox": "/assets/juggler.webp",
+  "Juggler - CLB giảm 40%": "/assets/juggler.webp",
 };
 
 export const ADMIN_NAVIGATION_ITEMS = [
