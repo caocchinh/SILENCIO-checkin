@@ -129,7 +129,7 @@ export default async function DashboardPage() {
           <QR url={session.session.session.id} />
           {ticketIncludeHauntedHouse && (
             <p className="text-red-500 text-xl mt-[6px] text-center">
-              Xin bạn vui lòng đến sớm lượt nhà ma của mình 10 phút
+              Xin bạn vui lòng đến sớm lượt nhà ma của mình sớm 10 phút
             </p>
           )}
         </div>
