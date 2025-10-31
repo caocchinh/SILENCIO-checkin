@@ -672,7 +672,7 @@ const AdminOnlinePage = () => {
                               {customerResponse.queueStartTime
                                 ? new Date(
                                     customerResponse.queueStartTime
-                                  ).toLocaleString("vi-VN")
+                                  ).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
                                 : "Không có"}
                             </p>
                           </div>
@@ -688,7 +688,7 @@ const AdminOnlinePage = () => {
                               {customerResponse.queueEndTime
                                 ? new Date(
                                     customerResponse.queueEndTime
-                                  ).toLocaleString("vi-VN")
+                                  ).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
                                 : "Không có"}
                             </p>
                           </div>

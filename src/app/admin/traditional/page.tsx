@@ -206,10 +206,10 @@ const AdminTraditionalPage = () => {
 
     return filteredCustomers.map((customer: CustomerInfo) => {
       const startTime = customer.queueStartTime
-        ? new Date(customer.queueStartTime).toLocaleString("vi-VN")
+        ? new Date(customer.queueStartTime).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
         : "Không có";
       const endTime = customer.queueEndTime
-        ? new Date(customer.queueEndTime).toLocaleString("vi-VN")
+        ? new Date(customer.queueEndTime).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
         : "Không có";
       const ticketImage =
         TICKET_IMAGE[customer.ticketType as keyof typeof TICKET_IMAGE];
