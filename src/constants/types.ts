@@ -18,3 +18,5 @@ export interface AllCustomerInfoResponse {
   customers: CustomerInfo[];
   total: number;
 }
+
+export type EmailHauntedHouseTicketInfo = Record<string, { ticketImageUrl: string }>;

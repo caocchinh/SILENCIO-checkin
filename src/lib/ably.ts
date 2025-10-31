@@ -99,8 +99,8 @@ export type CheckInRequest = {
 export type CheckInResponse = {
   type: "checkin_response";
   requestId: string;
+  customerId: string;
   success: boolean;
-  data?: CustomerInfo;
   error?: string;
   code?: string;
   timestamp: number;

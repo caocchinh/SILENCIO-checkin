@@ -148,11 +148,25 @@ export function useAbly(options: UseAblyOptions = {}) {
           response.requestId
         );
 
+         // Forward a simplified customer update event to the consumer (UI)
+        // so that screens listening for updates can react immediately.
+        if (onCustomerUpdateRef.current && response?.customerId) {
+          onCustomerUpdateRef.current({
+            type: EVENT_NAMES.CHECKED_IN,
+            data: {
+              studentId: response.customerId,
+              hasCheckedIn: response?.success,
+            },
+          });
+        }
+
         if (pending) {
           clearTimeout(pending.timeout);
           pendingCheckinRequestsRef.current.delete(response.requestId);
           pending.resolve(response);
         }
+
+       
       };
 
       channelsRef.current.checkinResponse?.subscribe(
@@ -160,22 +174,6 @@ export function useAbly(options: UseAblyOptions = {}) {
         handleCheckinResponse
       );
 
-      // Subscribe to customer updates if callback provided
-      const handleCustomerUpdate = (message: Ably.Message) => {
-        if (onCustomerUpdateRef.current) {
-          try {
-            const parsedMessage: CustomerUpdateMessage = {
-              type: message.name as CustomerUpdateMessage["type"],
-              data: message.data,
-            };
-            onCustomerUpdateRef.current(parsedMessage);
-          } catch (error) {
-            console.error("Error parsing customer update message:", error);
-          }
-        }
-      };
-
-      channelsRef.current.customerUpdates?.subscribe(handleCustomerUpdate);
 
       // Set initial connection state
       setConnectionState(client.connection.state);
@@ -190,9 +188,6 @@ export function useAbly(options: UseAblyOptions = {}) {
         channelsRef.current.checkinResponse?.unsubscribe(
           EVENT_NAMES.CHECKIN_RESPONSE,
           handleCheckinResponse
-        );
-        channelsRef.current.customerUpdates?.unsubscribe(
-          handleCustomerUpdate
         );
         client.connection.off(handleConnectionStateChange);
         clearAllPendingRequests();

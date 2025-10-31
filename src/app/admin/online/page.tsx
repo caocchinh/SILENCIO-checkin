@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ERROR_CODES, getErrorMessage } from "@/constants/errors";
-import { TICKET_IMAGE } from "@/constants/constants";
+import { EMAIL_HAUNTED_HOUSE_TICKET_INFO, TICKET_IMAGE } from "@/constants/constants";
 import { CustomerInfo } from "@/constants/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -89,7 +89,7 @@ const AdminOnlinePage = () => {
     mutationFn: async (customerId: string) => {
       const response = await ablyCheckInCustomer(customerId);
       if (response.success) {
-        return response.data;
+        return ;
       } else {
         throw new Error(response.code || "unknown-error");
       }
@@ -125,7 +125,7 @@ const AdminOnlinePage = () => {
   });
 
   // Handle Ably messages for customer updates
-  const handleAblyMessage = useCallback(
+  const handleCheckinResponse = useCallback(
     async (message: CustomerUpdateMessage) => {
       if (message.type === EVENT_NAMES.CHECKED_IN && message.data?.studentId) {
         if (
@@ -164,7 +164,7 @@ const AdminOnlinePage = () => {
     scanQRCode,
     checkInCustomer: ablyCheckInCustomer,
   } = useAbly({
-    onCustomerUpdate: handleAblyMessage,
+    onCustomerUpdate: handleCheckinResponse,
   });
 
   useEffect(() => {
@@ -623,8 +623,9 @@ const AdminOnlinePage = () => {
                         />
                       </div>
 
-                      <div className="flex items-start gap-3">
-                        <GhostIcon className="w-5 h-5 text-slate-600 mt-0.5" />
+                      <div className="flex items-start gap-1 flex-col">
+                       <div className="flex items-center gap-2">
+                         <GhostIcon className="w-5 h-5 text-slate-600 mt-0.5" />
                         <div className="flex-1">
                           <p className="text-xs text-slate-500 font-medium">
                             Nhà ma
@@ -635,6 +636,14 @@ const AdminOnlinePage = () => {
                               : "Không có"}
                           </p>
                         </div>
+                       </div>
+                       {customerResponse.hauntedHouseName && (
+                        <img
+                          src={EMAIL_HAUNTED_HOUSE_TICKET_INFO[customerResponse.hauntedHouseName].ticketImageUrl}
+                          alt={customerResponse.hauntedHouseName}
+                          className="rounded-sm"
+                        />
+                      )}
                       </div>
 
                       <div className="flex items-start gap-3">

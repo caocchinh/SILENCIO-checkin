@@ -510,7 +510,7 @@ async function initialize() {
           type: 'checkin_response',
           requestId: request.requestId,
           success: result.success,
-          data: result.data,
+          customerId: request.customerId,
           error: result.error,
           code: result.code,
           timestamp: Date.now(),
@@ -525,25 +525,6 @@ async function initialize() {
         
         await checkinResponseChannel.publish(EVENT_NAMES.CHECKIN_RESPONSE, response);
         state.requestsProcessed++;
-        
-        if (result.success) {
-          console.log(`✅ [Check-in Handler] Check-in successful for ${result.data?.name || request.customerId} (${request.requestId})`);
-          
-          // Publish to CUSTOMER_UPDATES channel for real-time UI updates
-          try {
-            const customerUpdatesChannel = ablyClient.channels.get(CHANNELS.CUSTOMER_UPDATES);
-            await customerUpdatesChannel.publish(EVENT_NAMES.CHECKED_IN, {
-              studentId: request.customerId,
-              hasCheckedIn: true,
-            });
-            console.log(`📢 [Check-in Handler] Published customer update for ${request.customerId}`);
-          } catch (publishError) {
-            console.error(`❌ [Check-in Handler] Failed to publish customer update:`, publishError);
-            // Don't fail the check-in if publishing to customer updates fails
-          }
-        } else {
-          console.warn(`⚠️ [Check-in Handler] Check-in failed: ${result.code} - ${result.error} (${request.requestId})`);
-        }
       } catch (error) {
         console.error(`❌ [Check-in Handler] Error processing check-in request ${request.requestId}:`, error);
         console.error(`❌ [Check-in Handler] Error details:`, {

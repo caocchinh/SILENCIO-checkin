@@ -47,7 +47,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import { TICKET_IMAGE } from "@/constants/constants";
+import { EMAIL_HAUNTED_HOUSE_TICKET_INFO, TICKET_IMAGE } from "@/constants/constants";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -71,8 +71,6 @@ const AdminTraditionalPage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
- 
-
   // Check-in mutation using Ably for real-time communication
   const checkInMutation = useMutation({
     mutationFn: async (customerId: string) => {
@@ -81,7 +79,7 @@ const AdminTraditionalPage = () => {
       if (!result.success) {
         throw new Error(result.code || "Failed to check in customer");
       }
-      return result.data;
+      return ;
     },
     onSuccess: () => {
       successToast({
@@ -332,7 +330,7 @@ const AdminTraditionalPage = () => {
           {/* Content */}
           {isLoading ? (
             <motion.div
-              className="flex flex-col items-center justify-center py-20 max-w-7xl flex-1 w-[90%] min-w-[90%] sm:min-w-[700px]"
+              className="bg-white relative flex flex-col p-3 items-center justify-center h-[200px] overflow-hidden max-w-6xl flex-2 w-[90%] min-w-[90%] sm:min-w-[620px]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
@@ -340,7 +338,7 @@ const AdminTraditionalPage = () => {
             </motion.div>
           ) : error ? (
             <motion.div
-              className="bg-red-50 border-2 border-red-200 rounded-xl p-8 text-center max-w-7xl w-[90%] min-w-[90%] sm:min-w-[700px]"
+              className="bg-white relative flex flex-col p-6 items-center justify-center rounded-xl shadow-lg border border-slate-200 overflow-hidden max-w-6xl flex-2 w-[90%] min-w-[90%] sm:min-w-[620px]"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
             >
@@ -501,6 +499,13 @@ const AdminTraditionalPage = () => {
                                           </span>
                                         </div>
                                       </div>
+                                      {customer.hauntedHouseName && (
+                                        <img
+                                          src={EMAIL_HAUNTED_HOUSE_TICKET_INFO[customer.hauntedHouseName].ticketImageUrl}
+                                          alt={customer.hauntedHouseName}
+                                          className="rounded-sm mt-1"
+                                        />
+                                      )}
                                       <div className="flex items-center gap-2">
                                         <ListOrdered className="h-4 w-4 text-muted-foreground" />
                                         <div className="text-md">
@@ -560,11 +565,11 @@ const AdminTraditionalPage = () => {
             </motion.div>
           ) : (
             <motion.div
-              className="bg-white rounded-xl shadow-lg p-12 text-center border border-slate-200 max-w-7xl flex-1 w-[90%] min-w-[90%] sm:min-w-[700px]"
+              className="bg-white relative flex flex-col p-3 items-center justify-center rounded-xl shadow-lg border border-slate-200 overflow-hidden max-w-6xl flex-2 w-[90%] min-w-[90%] sm:min-w-[620px]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <Search className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <Search className="w-14 h-14 text-slate-300 mx-auto mb-4" />
               <p className="text-slate-500 font-medium">
                 {searchQuery
                   ? "Không tìm thấy khách hàng nào"
