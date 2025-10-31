@@ -2,9 +2,9 @@
 "use client";
 import { useDevices } from "@yudiel/react-qr-scanner";
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import useSound from "use-sound";
-import { getCustomerInfoBySession, checkInUserAction } from "@/server/actions";
+import { useAbly } from "@/hooks/useAbly";
 import {
   Select,
   SelectContent,
@@ -57,8 +57,7 @@ import {
   updateAllCustomersCheckInStatus,
 } from "@/lib/utils";
 import { Scanner } from "@yudiel/react-qr-scanner";
-import { useAblyChannel } from "@/hooks/useAblyChannel";
-import { CHANNELS, CustomerUpdateMessage, EVENT_NAMES } from "@/lib/ably";
+import { CustomerUpdateMessage, EVENT_NAMES } from "@/lib/ably";
 
 const AdminOnlinePage = () => {
   const devices = useDevices();
@@ -79,6 +78,52 @@ const AdminOnlinePage = () => {
     useState(false);
   const isCheckInConfirmDialogOpenRef = useRef(isCheckInConfirmDialogOpen);
   const [isMounted, setIsMounted] = useState(false);
+  const [customerResponse, setCustomerResponse] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Handle Ably messages for customer updates
+  const handleAblyMessage = useCallback(
+    async (message: CustomerUpdateMessage) => {
+      if (message.type === EVENT_NAMES.CHECKED_IN && message.data?.studentId) {
+        if (
+          message.data.studentId === customerResponse?.studentId &&
+          !isLoading &&
+          !customerResponse.hasCheckedIn &&
+          !checkInMutation.isPending
+        ) {
+          setIsCheckInConfirmDialogOpen(false);
+          setIsCustomerAlreadyCheckedInError(true);
+          errorToast({
+            message: "Chú ý!",
+            description: "Khách hàng đã check in rồi.",
+          });
+        }
+        // Update local customer state if it matches
+        if (message.data.studentId === customerResponse?.studentId) {
+          setCustomerResponse((prev: any) => ({
+            ...prev,
+            hasCheckedIn: true,
+          }));
+        }
+        updateAllCustomersCheckInStatus(queryClient, message.data?.studentId);
+      } else if (message.type === "refresh_all") {
+        // Refetch all data
+        queryClient.invalidateQueries({ queryKey: ["allCustomerInfo"] });
+      }
+    },
+    [customerResponse?.studentId, customerResponse?.hasCheckedIn, isLoading, queryClient]
+  );
+
+  // Initialize unified Ably hook for all real-time communication
+  const {
+    isConnected: isAblyConnected,
+    connectionState: ablyConnectionState,
+    scanQRCode,
+    checkInCustomer: ablyCheckInCustomer,
+  } = useAbly({
+    onCustomerUpdate: handleAblyMessage,
+  });
 
   useEffect(() => {
     setTimeout(() => {
@@ -90,40 +135,53 @@ const AdminOnlinePage = () => {
     isCheckInConfirmDialogOpenRef.current = isCheckInConfirmDialogOpen;
   }, [isCheckInConfirmDialogOpen]);
 
-  // Fetch customer info when scannedData changes
-  const {
-    data: customerResponse,
-    isLoading,
-    isFetching,
-    error,
-  } = useQuery({
-    queryKey: ["customerInfo", scannedData + key],
-    queryFn: async () => {
-      if (!scannedData) return null;
-      personalInfoRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Scan QR code using Ably when scannedData changes
+  useEffect(() => {
+    if (!scannedData) return;
+
+    const performScan = async () => {
+      setIsLoading(true);
+      setError(null);
       setIsCustomerAlreadyCheckedInError(false);
       setIsCheckInConfirmDialogOpen(false);
-      const response = await getCustomerInfoBySession({
-        sessionId: scannedData,
-      });
-      if (response.success) {
-        return response.data;
-      } else {
-        throw new Error(getErrorMessage(response.code ?? "unknown-error"));
-      }
-    },
-    enabled: !!scannedData,
-    retry: false,
-  });
+      personalInfoRef.current?.scrollIntoView({ behavior: "smooth" });
 
-  // Mutation for checking in user
+      console.log("🔍 Starting QR scan:", {
+        sessionId: scannedData,
+        isAblyConnected,
+        ablyConnectionState,
+      });
+
+      try {
+        const response = await scanQRCode(scannedData);
+        console.log("✅ QR scan response:", response);
+        
+        if (response.success && response.data) {
+          setCustomerResponse(response.data);
+        } else {
+          console.error("❌ QR scan failed:", response);
+          throw new Error(getErrorMessage(response.code ?? "unknown-error"));
+        }
+      } catch (err) {
+        console.error("❌ QR scan error:", err);
+        setError(err instanceof Error ? err : new Error("Scan failed"));
+        setCustomerResponse(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    performScan();
+  }, [scannedData, key, scanQRCode, isAblyConnected, ablyConnectionState]);
+
+  // Mutation for checking in user via Ably
   const checkInMutation = useMutation({
     mutationFn: async (customerId: string) => {
-      const response = await checkInUserAction({ customerId });
+      const response = await ablyCheckInCustomer(customerId);
       if (response.success) {
         return response.data;
       } else {
-        throw new Error(response.code);
+        throw new Error(response.code || "unknown-error");
       }
     },
     onSuccess: () => {
@@ -186,50 +244,6 @@ const AdminOnlinePage = () => {
     };
   }, [scannerKey]);
 
-  const handleAblyMessage = useCallback(
-    async (message: CustomerUpdateMessage) => {
-      if (message.type === EVENT_NAMES.CHECKED_IN && message.data?.studentId) {
-        if (
-          message.data.studentId === customerResponse?.studentId &&
-          !isFetching &&
-          !customerResponse.hasCheckedIn &&
-          !checkInMutation.isPending
-        ) {
-          setIsCheckInConfirmDialogOpen(false);
-          setIsCustomerAlreadyCheckedInError(true);
-          errorToast({
-            message: "Chú ý!",
-            description: "Khách hàng đã check in rồi.",
-          });
-        }
-        // Update React Query cache with the checked-in customer
-        updateCustomerCheckInStatus(queryClient, [
-          "customerInfo",
-          scannedData + key,
-        ]);
-        updateAllCustomersCheckInStatus(queryClient, message.data?.studentId);
-      } else if (message.type === "refresh_all") {
-        // Refetch all data
-        queryClient.invalidateQueries({ queryKey: ["allCustomerInfo"] });
-      }
-    },
-    [
-      checkInMutation.isPending,
-      customerResponse?.hasCheckedIn,
-      customerResponse?.studentId,
-      isFetching,
-      key,
-      queryClient,
-      scannedData,
-    ]
-  );
-
-  // Initialize Ably connection
-  const { isConnected, connectionState } = useAblyChannel({
-    channelName: CHANNELS.CUSTOMER_UPDATES,
-    onMessage: handleAblyMessage,
-  });
-
   return (
     <div className="min-h-screen flex items-start justify-center w-full  p-2 md:p-4">
       {/* Main Content Grid */}
@@ -288,7 +302,7 @@ const AdminOnlinePage = () => {
 
                     const now = Date.now();
                     const timeSinceLastUpdate = now - lastKeyUpdateRef.current;
-                    if (!isFetching && timeSinceLastUpdate >= 2000) {
+                    if (!isLoading && timeSinceLastUpdate >= 2000) {
                       if (play) play();
                       setKey((prevKey) => prevKey + 1);
                       lastKeyUpdateRef.current = now;
@@ -329,9 +343,9 @@ const AdminOnlinePage = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div>
-                    {isConnected ? (
+                    {isAblyConnected ? (
                       <Wifi className="w-5 h-5 text-green-500" />
-                    ) : connectionState === "connecting" ? (
+                    ) : ablyConnectionState === "connecting" ? (
                       <Loader2 className="w-5 h-5 text-yellow-500 animate-spin" />
                     ) : (
                       <WifiOff className="w-5 h-5 text-red-500  animate-pulse" />
@@ -340,9 +354,9 @@ const AdminOnlinePage = () => {
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>
-                    {isConnected
+                    {isAblyConnected
                       ? "Đã kết nối thời gian thực"
-                      : connectionState === "connecting"
+                      : ablyConnectionState === "connecting"
                       ? "Đang kết nối..."
                       : "Mất kết nối"}
                   </p>
@@ -676,11 +690,11 @@ const AdminOnlinePage = () => {
                         <AlertDialogTrigger asChild>
                           <Button
                             className="w-full -mt-2 cursor-pointer"
-                            disabled={checkInMutation.isPending || !isConnected}
+                            disabled={checkInMutation.isPending || !isAblyConnected}
                           >
                             {checkInMutation.isPending ? (
                               "Đang check in..."
-                            ) : !isConnected ? (
+                            ) : !isAblyConnected ? (
                               <>
                                 Không có kết nối{" "}
                                 <WifiOff className=" animate-pulse" />
@@ -714,7 +728,7 @@ const AdminOnlinePage = () => {
                             <Button
                               className="cursor-pointer"
                               disabled={
-                                checkInMutation.isPending || !isConnected
+                                checkInMutation.isPending || !isAblyConnected
                               }
                               onClick={() =>
                                 checkInMutation.mutate(
@@ -722,7 +736,7 @@ const AdminOnlinePage = () => {
                                 )
                               }
                             >
-                              {!isConnected ? (
+                              {!isAblyConnected ? (
                                 <>
                                   Không có kết nối{" "}
                                   <WifiOff className=" animate-pulse" />

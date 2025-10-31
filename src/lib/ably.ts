@@ -53,6 +53,10 @@ export function getClientAblyClient(): Ably.Realtime {
 // Channel names
 export const CHANNELS = {
   CUSTOMER_UPDATES: "customer-updates",
+  QR_SCAN_REQUESTS: "qr-scan-requests",
+  QR_SCAN_RESPONSES: "qr-scan-responses",
+  CHECKIN_REQUESTS: "checkin-requests",
+  CHECKIN_RESPONSES: "checkin-responses",
 } as const;
 
 // Message types
@@ -65,8 +69,53 @@ export type CustomerUpdateMessage = {
   };
 };
 
+// QR Scan request/response types
+export type QRScanRequest = {
+  type: "scan_request";
+  requestId: string;
+  sessionId: string;
+  timestamp: number;
+};
+
+export type QRScanResponse = {
+  type: "scan_response";
+  requestId: string;
+  success: boolean;
+  data?: any;
+  error?: string;
+  code?: string;
+  timestamp: number;
+};
+
+// Check-in request/response types
+export type CheckInRequest = {
+  type: "checkin_request";
+  requestId: string;
+  customerId: string;
+  timestamp: number;
+};
+
+export type CheckInResponse = {
+  type: "checkin_response";
+  requestId: string;
+  success: boolean;
+  data?: any;
+  error?: string;
+  code?: string;
+  timestamp: number;
+};
+
 // Ably event names
 export const EVENT_NAMES = {
   CHECKED_IN: "checked_in",
   REFRESH_ALL: "refresh_all",
+  SCAN_REQUEST: "scan_request",
+  SCAN_RESPONSE: "scan_response",
+  CHECKIN_REQUEST: "checkin_request",
+  CHECKIN_RESPONSE: "checkin_response",
 } as const;
+
+// Generate unique request ID
+export function generateRequestId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}

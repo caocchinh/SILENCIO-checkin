@@ -1,0 +1,20 @@
+{
+  "name": "silencio-ably-worker",
+  "version": "1.0.0",
+  "description": "Standalone Ably worker for Silencio check-in system",
+  "main": "ably-worker.js",
+  "scripts": {
+    "start": "node ably-worker.js",
+    "dev": "node ably-worker.js",
+    "health": "curl http://localhost:${PORT:-3001}/health"
+  },
+  "keywords": ["ably", "worker", "real-time"],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "ably": "^2.14.0",
+    "@neondatabase/serverless": "^1.0.2",
+    "ws": "^8.18.0"
+  }
+}

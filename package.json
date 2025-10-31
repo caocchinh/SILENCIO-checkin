@@ -9,7 +9,12 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "worker:install": "cd worker && npm install",
+    "worker:dev": "cd worker && npm start",
+    "worker:health": "curl http://localhost:3001/health",
+    "worker:docker:build": "docker build -f Dockerfile.worker -t silencio-worker .",
+    "worker:docker:run": "docker run -d --name ably-worker --restart unless-stopped -p 3001:3001 --env-file .env silencio-worker"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

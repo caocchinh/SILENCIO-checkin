@@ -3,6 +3,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AllCustomerInfoResponse, CustomerInfo } from "@/constants/types";
+import { useAbly } from "@/hooks/useAbly";
 import {
   Loader2,
   AlertCircle,
@@ -23,8 +24,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useState, useMemo, useCallback } from "react";
-import { useAblyChannel } from "@/hooks/useAblyChannel";
-import { CHANNELS, EVENT_NAMES, type CustomerUpdateMessage } from "@/lib/ably";
+import { EVENT_NAMES, type CustomerUpdateMessage } from "@/lib/ably";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,7 +48,6 @@ import {
 } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { TICKET_IMAGE } from "@/constants/constants";
-import { checkInUserAction } from "@/server/actions";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -72,11 +71,52 @@ const AdminTraditionalPage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  // Check-in mutation
+  // Ably real-time message handler
+  const handleAblyMessage = useCallback(
+    (message: CustomerUpdateMessage) => {
+      if (message.type === EVENT_NAMES.CHECKED_IN && message.data?.studentId) {
+        if (
+          message.data.studentId === chosenCustomer?.studentId &&
+          !checkInMutation.isPending &&
+          !chosenCustomer?.hasCheckedIn &&
+          isCheckInConfirmDialogOpen
+        ) {
+          errorToast({
+            message: "Chú ý!",
+            description: getErrorMessage(
+              ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN
+            ),
+          });
+        }
+        // Update React Query cache with the checked-in customer
+        updateAllCustomersCheckInStatus(queryClient, message.data?.studentId);
+      } else if (message.type === "refresh_all") {
+        // Refetch all data
+        queryClient.invalidateQueries({ queryKey: ["allCustomerInfo"] });
+      }
+    },
+    [
+      chosenCustomer?.studentId,
+      chosenCustomer?.hasCheckedIn,
+      isCheckInConfirmDialogOpen,
+      queryClient,
+    ]
+  );
+
+  // Initialize unified Ably hook for all real-time communication
+  const {
+    isConnected: isAblyConnected,
+    connectionState: ablyConnectionState,
+    checkInCustomer: ablyCheckInCustomer,
+  } = useAbly({
+    onCustomerUpdate: handleAblyMessage,
+  });
+
+  // Check-in mutation using Ably for real-time communication
   const checkInMutation = useMutation({
     mutationFn: async (customerId: string) => {
       setErrorMessage(null);
-      const result = await checkInUserAction({ customerId });
+      const result = await ablyCheckInCustomer(customerId);
       if (!result.success) {
         throw new Error(result.code || "Failed to check in customer");
       }
@@ -114,45 +154,6 @@ const AdminTraditionalPage = () => {
         message: message,
       });
     },
-  });
-
-  // Ably real-time message handler
-  const handleAblyMessage = useCallback(
-    (message: CustomerUpdateMessage) => {
-      if (message.type === EVENT_NAMES.CHECKED_IN && message.data?.studentId) {
-        if (
-          message.data.studentId === chosenCustomer?.studentId &&
-          !checkInMutation.isPending &&
-          !chosenCustomer?.hasCheckedIn &&
-          isCheckInConfirmDialogOpen
-        ) {
-          errorToast({
-            message: "Chú ý!",
-            description: getErrorMessage(
-              ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN
-            ),
-          });
-        }
-        // Update React Query cache with the checked-in customer
-        updateAllCustomersCheckInStatus(queryClient, message.data?.studentId);
-      } else if (message.type === "refresh_all") {
-        // Refetch all data
-        queryClient.invalidateQueries({ queryKey: ["allCustomerInfo"] });
-      }
-    },
-    [
-      checkInMutation.isPending,
-      chosenCustomer?.hasCheckedIn,
-      chosenCustomer?.studentId,
-      isCheckInConfirmDialogOpen,
-      queryClient,
-    ]
-  );
-
-  // Initialize Ably connection
-  const { isConnected, connectionState } = useAblyChannel({
-    channelName: CHANNELS.CUSTOMER_UPDATES,
-    onMessage: handleAblyMessage,
   });
 
   const {
@@ -253,9 +254,9 @@ const AdminTraditionalPage = () => {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div>
-                            {isConnected ? (
+                            {isAblyConnected ? (
                               <Wifi className="w-5 h-5 text-green-500" />
-                            ) : connectionState === "connecting" ? (
+                            ) : ablyConnectionState === "connecting" ? (
                               <Loader2 className="w-5 h-5 text-yellow-500 animate-spin" />
                             ) : (
                               <WifiOff className="w-5 h-5 text-red-500  animate-pulse" />
@@ -264,9 +265,9 @@ const AdminTraditionalPage = () => {
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>
-                            {isConnected
+                            {isAblyConnected
                               ? "Đã kết nối thời gian thực"
-                              : connectionState === "connecting"
+                              : ablyConnectionState === "connecting"
                               ? "Đang kết nối..."
                               : "Mất kết nối"}
                           </p>
@@ -365,7 +366,7 @@ const AdminTraditionalPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              {!isConnected && (
+              {!isAblyConnected && (
                 <div className="absolute top-0 text-white gap-2 left-0 w-full h-full bg-black/40  z-10 flex items-center justify-center">
                   <WifiOff className="w-12 h-12 text-red-500 animate-pulse" />
                   Đang đồng bộ hóa dữ liệu

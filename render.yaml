@@ -1,0 +1,33 @@
+# Render Blueprint for Ably Worker
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: worker
+    name: silencio-ably-worker
+    runtime: node
+    plan: starter  # $7/month - can be scaled up as needed
+    buildCommand: cd worker && npm install
+    startCommand: node worker/ably-worker.js
+    
+    # Environment variables (set these in Render dashboard)
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: ABLY_API_KEY
+        sync: false  # Set manually in dashboard
+      - key: DATABASE_URL
+        sync: false  # Set manually in dashboard
+    
+    # Health check configuration
+    healthCheckPath: /health
+    
+    # Auto-deploy from main branch
+    autoDeploy: true
+    
+    # Disk storage (optional, for logs)
+    disk:
+      name: worker-data
+      mountPath: /app/logs
+      sizeGB: 1
