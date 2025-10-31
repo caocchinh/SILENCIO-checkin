@@ -109,11 +109,11 @@ export default async function DashboardPage() {
                 Lượt: {customerQueueSpot?.queue?.queueNumber} (Từ{" "}
                 {new Date(
                   customerQueueSpot?.queue?.queueStartTime
-                ).toLocaleString("vi-VN")}
+                ).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}{" "}
                 đến{" "}
                 {new Date(
                   customerQueueSpot?.queue?.queueEndTime
-                ).toLocaleString("vi-VN")}
+                ).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
                 )
               </p>
             </div>
