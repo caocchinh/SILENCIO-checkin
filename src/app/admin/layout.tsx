@@ -50,10 +50,10 @@ const AdminContent = async ({ children }: { children: React.ReactNode }) => {
     <PinVerificationProvider>
       <ActivityTimer />
       <PinVerification>
-        <div className="flex w-full flex-col items-start justify-center p-4">
+        <div className="flex w-full flex-col items-start justify-center p-4 sm:pt-0 pt-4">
           <div className="flex w-full flex-col items-start justify-start gap-2 border-gray-600 border-b pb-4 md:flex-row md:items-center md:gap-8">
             <div className="flex items-center justify-center gap-4 flex-col sm:flex-row w-full sm:w-max">
-              <div className="flex w-full sm:w-max flex-col items-start justify-center gap-2">
+              <div className="flex w-full sm:w-max flex-col items-start justify-center gap-0">
                 {" "}
                 <h1 className="w-full font-semibold text-3xl text-[#0084ff]">
                   Hệ thống check in

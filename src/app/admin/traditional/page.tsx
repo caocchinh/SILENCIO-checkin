@@ -234,7 +234,7 @@ const AdminTraditionalPage = () => {
 
   return (
     <>
-      <div className="min-h-screen w-full p-4">
+      <div className="min-h-screen w-full p-4 pt-3">
         <div className=" flex items-start gap-3 justify-center flex-wrap">
           {/* Header */}
           <div className="bg-white rounded-xl shadow-lg p-6 mb-4 border border-slate-200 min-w-[90%] sm:min-w-[440px] max-w-6xl flex-1">
@@ -368,7 +368,7 @@ const AdminTraditionalPage = () => {
                 </div>
               )}
               <div className="flex flex-col gap-2 mt-0 p-4">
-                <ScrollArea className="h-[75vh] pr-2 w-full" type="always">
+                <ScrollArea className="h-[80vh] pr-2 w-full" type="always">
                   <div>
                     <Accordion
                       type="single"
