@@ -107,20 +107,13 @@ export default async function DashboardPage() {
               </p>
               <p className="text-red-500">
                 Lượt: {customerQueueSpot?.queue?.queueNumber} (Từ{" "}
-                {customerQueueSpot?.queue?.queueStartTime.toLocaleTimeString(
-                  [],
-                  {
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  }
-                )}{" "}
+                {new Date(
+                  customerQueueSpot?.queue?.queueStartTime
+                ).toLocaleString("vi-VN")}
                 đến{" "}
-                {customerQueueSpot?.queue?.queueEndTime.toLocaleTimeString([], {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                })}
+                {new Date(
+                  customerQueueSpot?.queue?.queueEndTime
+                ).toLocaleString("vi-VN")}
                 )
               </p>
             </div>
