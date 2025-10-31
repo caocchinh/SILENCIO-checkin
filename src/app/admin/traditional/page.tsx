@@ -71,46 +71,7 @@ const AdminTraditionalPage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  // Ably real-time message handler
-  const handleAblyMessage = useCallback(
-    (message: CustomerUpdateMessage) => {
-      if (message.type === EVENT_NAMES.CHECKED_IN && message.data?.studentId) {
-        if (
-          message.data.studentId === chosenCustomer?.studentId &&
-          !checkInMutation.isPending &&
-          !chosenCustomer?.hasCheckedIn &&
-          isCheckInConfirmDialogOpen
-        ) {
-          errorToast({
-            message: "Chú ý!",
-            description: getErrorMessage(
-              ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN
-            ),
-          });
-        }
-        // Update React Query cache with the checked-in customer
-        updateAllCustomersCheckInStatus(queryClient, message.data?.studentId);
-      } else if (message.type === "refresh_all") {
-        // Refetch all data
-        queryClient.invalidateQueries({ queryKey: ["allCustomerInfo"] });
-      }
-    },
-    [
-      chosenCustomer?.studentId,
-      chosenCustomer?.hasCheckedIn,
-      isCheckInConfirmDialogOpen,
-      queryClient,
-    ]
-  );
-
-  // Initialize unified Ably hook for all real-time communication
-  const {
-    isConnected: isAblyConnected,
-    connectionState: ablyConnectionState,
-    checkInCustomer: ablyCheckInCustomer,
-  } = useAbly({
-    onCustomerUpdate: handleAblyMessage,
-  });
+ 
 
   // Check-in mutation using Ably for real-time communication
   const checkInMutation = useMutation({
@@ -154,6 +115,42 @@ const AdminTraditionalPage = () => {
         message: message,
       });
     },
+  });
+
+  // Ably real-time message handler
+   const handleAblyMessage = useCallback(
+    (message: CustomerUpdateMessage) => {
+      if (message.type === EVENT_NAMES.CHECKED_IN && message.data?.studentId) {
+        if (
+          message.data.studentId === chosenCustomer?.studentId &&
+          !checkInMutation.isPending &&
+          !chosenCustomer?.hasCheckedIn &&
+          isCheckInConfirmDialogOpen
+        ) {
+          errorToast({
+            message: "Chú ý!",
+            description: getErrorMessage(
+              ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN
+            ),
+          });
+        }
+        // Update React Query cache with the checked-in customer
+        updateAllCustomersCheckInStatus(queryClient, message.data?.studentId);
+      } else if (message.type === "refresh_all") {
+        // Refetch all data
+        queryClient.invalidateQueries({ queryKey: ["allCustomerInfo"] });
+      }
+    },
+    [chosenCustomer?.studentId, chosenCustomer?.hasCheckedIn, checkInMutation.isPending, isCheckInConfirmDialogOpen, queryClient]
+  );
+
+    // Initialize unified Ably hook for all real-time communication
+  const {
+    isConnected: isAblyConnected,
+    connectionState: ablyConnectionState,
+    checkInCustomer: ablyCheckInCustomer,
+  } = useAbly({
+    onCustomerUpdate: handleAblyMessage,
   });
 
   const {

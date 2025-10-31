@@ -1,4 +1,5 @@
 import * as Ably from "ably";
+import type { CustomerInfo } from "@/constants/types";
 
 // Server-side Ably client (with full API key)
 let serverAblyInstance: Ably.Realtime | null = null;
@@ -81,7 +82,7 @@ export type QRScanResponse = {
   type: "scan_response";
   requestId: string;
   success: boolean;
-  data?: any;
+  data?: CustomerInfo;
   error?: string;
   code?: string;
   timestamp: number;
@@ -99,7 +100,7 @@ export type CheckInResponse = {
   type: "checkin_response";
   requestId: string;
   success: boolean;
-  data?: any;
+  data?: CustomerInfo;
   error?: string;
   code?: string;
   timestamp: number;

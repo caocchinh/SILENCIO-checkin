@@ -33,6 +33,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { ERROR_CODES, getErrorMessage } from "@/constants/errors";
 import { TICKET_IMAGE } from "@/constants/constants";
+import { CustomerInfo } from "@/constants/types";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -78,9 +79,50 @@ const AdminOnlinePage = () => {
     useState(false);
   const isCheckInConfirmDialogOpenRef = useRef(isCheckInConfirmDialogOpen);
   const [isMounted, setIsMounted] = useState(false);
-  const [customerResponse, setCustomerResponse] = useState<any>(null);
+  const [customerResponse, setCustomerResponse] = useState<CustomerInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+
+   // Mutation for checking in user via Ably
+  const checkInMutation = useMutation({
+    mutationFn: async (customerId: string) => {
+      const response = await ablyCheckInCustomer(customerId);
+      if (response.success) {
+        return response.data;
+      } else {
+        throw new Error(response.code || "unknown-error");
+      }
+    },
+    onSuccess: () => {
+      // Update the cached customer info with new check-in status
+      setIsCheckInConfirmDialogOpen(false);
+      updateCustomerCheckInStatus(queryClient, [
+        "customerInfo",
+        scannedData + key,
+      ]);
+      successToast({
+        message: "Thành công",
+        description: "Khách hàng đã được check in thành công",
+      });
+    },
+    onError: (error) => {
+      if (error instanceof Error) {
+        if (error.message === ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN) {
+          setIsCustomerAlreadyCheckedInError(true);
+          setIsCheckInConfirmDialogOpen(false);
+          updateCustomerCheckInStatus(queryClient, [
+            "customerInfo",
+            scannedData + key,
+          ]);
+        }
+        errorToast({
+          message: "Thất bại",
+          description: getErrorMessage(error.message ?? "unknown-error"),
+        });
+      }
+    },
+  });
 
   // Handle Ably messages for customer updates
   const handleAblyMessage = useCallback(
@@ -101,10 +143,10 @@ const AdminOnlinePage = () => {
         }
         // Update local customer state if it matches
         if (message.data.studentId === customerResponse?.studentId) {
-          setCustomerResponse((prev: any) => ({
+          setCustomerResponse((prev) => prev ? ({
             ...prev,
             hasCheckedIn: true,
-          }));
+          }) : null);
         }
         updateAllCustomersCheckInStatus(queryClient, message.data?.studentId);
       } else if (message.type === "refresh_all") {
@@ -112,7 +154,7 @@ const AdminOnlinePage = () => {
         queryClient.invalidateQueries({ queryKey: ["allCustomerInfo"] });
       }
     },
-    [customerResponse?.studentId, customerResponse?.hasCheckedIn, isLoading, queryClient]
+    [customerResponse?.studentId, customerResponse?.hasCheckedIn, isLoading, checkInMutation.isPending, queryClient]
   );
 
   // Initialize unified Ably hook for all real-time communication
@@ -174,45 +216,7 @@ const AdminOnlinePage = () => {
     performScan();
   }, [scannedData, key, scanQRCode, isAblyConnected, ablyConnectionState]);
 
-  // Mutation for checking in user via Ably
-  const checkInMutation = useMutation({
-    mutationFn: async (customerId: string) => {
-      const response = await ablyCheckInCustomer(customerId);
-      if (response.success) {
-        return response.data;
-      } else {
-        throw new Error(response.code || "unknown-error");
-      }
-    },
-    onSuccess: () => {
-      // Update the cached customer info with new check-in status
-      setIsCheckInConfirmDialogOpen(false);
-      updateCustomerCheckInStatus(queryClient, [
-        "customerInfo",
-        scannedData + key,
-      ]);
-      successToast({
-        message: "Thành công",
-        description: "Khách hàng đã được check in thành công",
-      });
-    },
-    onError: (error) => {
-      if (error instanceof Error) {
-        if (error.message === ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN) {
-          setIsCustomerAlreadyCheckedInError(true);
-          setIsCheckInConfirmDialogOpen(false);
-          updateCustomerCheckInStatus(queryClient, [
-            "customerInfo",
-            scannedData + key,
-          ]);
-        }
-        errorToast({
-          message: "Thất bại",
-          description: getErrorMessage(error.message ?? "unknown-error"),
-        });
-      }
-    },
-  });
+ 
 
   // Load selected device from localStorage on mount or select the first device available
   useEffect(() => {
