@@ -16,7 +16,7 @@ export const ADMIN_NAVIGATION_ITEMS = [
     path: "/admin/online",
   },
   {
-    label: "Check in truyền thống",
+    label: "Check in traditional",
     path: "/admin/traditional",
   },
 ];
@@ -29,21 +29,17 @@ export const EMAIL_HAUNTED_HOUSE_TICKET_INFO: EmailHauntedHouseTicketInfo = {
   "Melody of Darkness": {
     ticketImageUrl:
       "https://vteam-online-ticket.vercel.app/assets/melody_of_darkness.webp",
-   
   },
   "Orphaned Soul": {
     ticketImageUrl:
       "https://vteam-online-ticket.vercel.app/assets/orphaned_soul.webp",
-    
   },
 
   "Whispering Sewers": {
     ticketImageUrl:
       "https://vteam-online-ticket.vercel.app/assets/whispering_sewers.webp",
-    
   },
   Twins: {
     ticketImageUrl: "https://vteam-online-ticket.vercel.app/assets/twins.webp",
-    
   },
 };

@@ -121,10 +121,10 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
             </div>
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900">
-                Xác thực staff
+                Staff Verification
               </h2>
               <p className="mt-2 text-sm text-gray-600">
-                Nhập mã PIN để truy cập hệ thống
+                Enter PIN to access the system
               </p>
             </div>
           </div>
@@ -178,8 +178,9 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
 
           <div className="mt-6 rounded-lg bg-blue-50 p-4">
             <p className="text-center text-xs text-gray-600">
-              <span className="font-semibold">Lưu ý:</span> Vì bảo mật, bạn sẽ
-              cần nhập lại mã PIN khi tắt tab hoặc sau 5 phút không hoạt động.
+              <span className="font-semibold">Warning:</span> For security
+              reasons, you will need to re-enter your PIN when you close the tab
+              or after 5 minutes of inactivity.
             </p>
           </div>
           <div className="mt-6 w-full">

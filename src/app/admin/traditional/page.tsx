@@ -47,7 +47,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import { EMAIL_HAUNTED_HOUSE_TICKET_INFO, TICKET_IMAGE } from "@/constants/constants";
+import {
+  EMAIL_HAUNTED_HOUSE_TICKET_INFO,
+  TICKET_IMAGE,
+} from "@/constants/constants";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -79,7 +82,7 @@ const AdminTraditionalPage = () => {
       if (!result.success) {
         throw new Error(result.code || "Failed to check in customer");
       }
-      return ;
+      return;
     },
     onSuccess: () => {
       successToast({
@@ -116,7 +119,7 @@ const AdminTraditionalPage = () => {
   });
 
   // Ably real-time message handler
-   const handleAblyMessage = useCallback(
+  const handleAblyMessage = useCallback(
     (message: CustomerUpdateMessage) => {
       if (message.type === EVENT_NAMES.CHECKED_IN && message.data?.studentId) {
         if (
@@ -139,10 +142,16 @@ const AdminTraditionalPage = () => {
         queryClient.invalidateQueries({ queryKey: ["allCustomerInfo"] });
       }
     },
-    [chosenCustomer?.studentId, chosenCustomer?.hasCheckedIn, checkInMutation.isPending, isCheckInConfirmDialogOpen, queryClient]
+    [
+      chosenCustomer?.studentId,
+      chosenCustomer?.hasCheckedIn,
+      checkInMutation.isPending,
+      isCheckInConfirmDialogOpen,
+      queryClient,
+    ]
   );
 
-    // Initialize unified Ably hook for all real-time communication
+  // Initialize unified Ably hook for all real-time communication
   const {
     isConnected: isAblyConnected,
     connectionState: ablyConnectionState,
@@ -206,10 +215,14 @@ const AdminTraditionalPage = () => {
 
     return filteredCustomers.map((customer: CustomerInfo) => {
       const startTime = customer.queueStartTime
-        ? new Date(customer.queueStartTime).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
+        ? new Date(customer.queueStartTime).toLocaleString("vi-VN", {
+            timeZone: "Asia/Ho_Chi_Minh",
+          })
         : "Không có";
       const endTime = customer.queueEndTime
-        ? new Date(customer.queueEndTime).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
+        ? new Date(customer.queueEndTime).toLocaleString("vi-VN", {
+            timeZone: "Asia/Ho_Chi_Minh",
+          })
         : "Không có";
       const ticketImage =
         TICKET_IMAGE[customer.ticketType as keyof typeof TICKET_IMAGE];
@@ -243,7 +256,7 @@ const AdminTraditionalPage = () => {
                 <div>
                   <div className="flex items-center gap-4">
                     <h1 className="text-2xl font-bold text-slate-900">
-                      Dữ liệu khách hàng
+                      Customer data
                     </h1>
                     <TooltipProvider>
                       <Tooltip>
@@ -261,10 +274,10 @@ const AdminTraditionalPage = () => {
                         <TooltipContent>
                           <p>
                             {isAblyConnected
-                              ? "Đã kết nối thời gian thực"
+                              ? "Connected in real-time"
                               : ablyConnectionState === "connecting"
-                              ? "Đang kết nối..."
-                              : "Mất kết nối"}
+                              ? "Connecting..."
+                              : "Disconnected"}
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -273,19 +286,19 @@ const AdminTraditionalPage = () => {
                   <div className="text-sm text-slate-500 text-center flex flex-col items-start sm:text-left">
                     {customerData ? (
                       searchQuery ? (
-                        `${filteredCustomers.length} / ${customerData.total} khách hàng`
+                        `${filteredCustomers.length} / ${customerData.total} customers`
                       ) : (
                         <div className="flex-col flex items-start justify-center gap-1 text-left">
                           <span className="w-full">
                             {" "}
-                            Tổng số: {customerData.total} khách hàng
+                            Total: {customerData.total} customers
                           </span>
                         </div>
                       )
                     ) : null}
                     {customerData && (
                       <span className="w-full text-left">
-                        Khách hàng đã check in:{" "}
+                        Checked in customers:{" "}
                         {
                           customerData.customers.filter(
                             (customer) => customer.hasCheckedIn
@@ -301,7 +314,7 @@ const AdminTraditionalPage = () => {
                 disabled={isRefetching}
                 className="px-4 py-2 bg-[#0084ff] sm:w-auto w-full hover:bg-[#0084ff]/80 cursor-pointer"
               >
-                {isRefetching ? "Đang tải" : "Làm mới"}
+                {isRefetching ? "Loading..." : "Refresh"}
                 <RefreshCw
                   className={cn("w-4 h-4 ml-2", isRefetching && "animate-spin")}
                 />
@@ -313,7 +326,7 @@ const AdminTraditionalPage = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input
                 type="text"
-                placeholder="Tìm kiếm theo tên, mã số HS, hoặc email..."
+                placeholder="Search by name, student ID, or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -421,7 +434,7 @@ const AdminTraditionalPage = () => {
                                         <User className="h-4 w-4 text-muted-foreground mt-0.5" />
                                         <div className="flex-1">
                                           <div className="text-md text-muted-foreground">
-                                            Tên
+                                            Name
                                           </div>
                                           <div className="font-medium">
                                             {customer.name}
@@ -432,7 +445,7 @@ const AdminTraditionalPage = () => {
                                         <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
                                         <div className="flex-1">
                                           <div className="text-md text-muted-foreground">
-                                            Lớp
+                                            Class
                                           </div>
                                           <div className="font-medium">
                                             {customer.homeroom}
@@ -445,7 +458,7 @@ const AdminTraditionalPage = () => {
                                         <Receipt className="h-4 w-4 text-muted-foreground mt-0.5" />
                                         <div className="flex-1">
                                           <div className="text-md text-muted-foreground">
-                                            Mã học sinh
+                                            Student ID
                                           </div>
                                           <div className="font-medium font-mono">
                                             {customer.studentId}
@@ -474,7 +487,7 @@ const AdminTraditionalPage = () => {
                                         <Ticket className="h-4 w-4 text-muted-foreground mt-0.5" />
                                         <div className="flex-1">
                                           <div className="text-md text-muted-foreground">
-                                            Hạng vé:{" "}
+                                            Ticket type:{" "}
                                             <span className="text-black font-semibold">
                                               {customer.ticketType}
                                             </span>
@@ -490,18 +503,22 @@ const AdminTraditionalPage = () => {
                                         <GhostIcon className="h-4 w-4 text-muted-foreground" />
                                         <div className="text-md">
                                           <span className="text-muted-foreground">
-                                            Nhà ma:{" "}
+                                            Haunted house:{" "}
                                           </span>
                                           <span className="font-semibold">
                                             {customer.hauntedHouseName
                                               ? customer.hauntedHouseName
-                                              : "Không có"}
+                                              : "No haunted house"}
                                           </span>
                                         </div>
                                       </div>
                                       {customer.hauntedHouseName && (
                                         <img
-                                          src={EMAIL_HAUNTED_HOUSE_TICKET_INFO[customer.hauntedHouseName].ticketImageUrl}
+                                          src={
+                                            EMAIL_HAUNTED_HOUSE_TICKET_INFO[
+                                              customer.hauntedHouseName
+                                            ].ticketImageUrl
+                                          }
                                           alt={customer.hauntedHouseName}
                                           className="rounded-sm mt-1"
                                         />
@@ -510,7 +527,7 @@ const AdminTraditionalPage = () => {
                                         <ListOrdered className="h-4 w-4 text-muted-foreground" />
                                         <div className="text-md">
                                           <span className="text-muted-foreground">
-                                            Lượt :{" "}
+                                            Queue number:{" "}
                                           </span>
                                           <span className="font-semibold text-[#0084ff] ">
                                             #
@@ -524,7 +541,7 @@ const AdminTraditionalPage = () => {
                                         <Clock className="h-4 w-4 text-muted-foreground" />
                                         <div className="text-md">
                                           <span className="text-muted-foreground">
-                                            Nhà ma bắt đầu lúc:{" "}
+                                            Haunted house start time:{" "}
                                           </span>
                                           <span className="font-semibold">
                                             {customer.formattedStartTime}
@@ -535,7 +552,7 @@ const AdminTraditionalPage = () => {
                                         <Clock className="h-4 w-4 text-muted-foreground" />
                                         <div className="text-md">
                                           <span className="text-muted-foreground">
-                                            Nhà ma kết thúc lúc:{" "}
+                                            Haunted house end time:{" "}
                                           </span>
                                           <span className="font-semibold">
                                             {customer.formattedEndTime}
@@ -571,16 +588,14 @@ const AdminTraditionalPage = () => {
             >
               <Search className="w-14 h-14 text-slate-300 mx-auto mb-4" />
               <p className="text-slate-500 font-medium">
-                {searchQuery
-                  ? "Không tìm thấy khách hàng nào"
-                  : "Không có khách hàng nào"}
+                {searchQuery ? "No customers found" : "No customers available"}
               </p>
               {searchQuery && (
                 <Button
                   onClick={() => setSearchQuery("")}
                   className="mt-4 bg-[#0084ff] text-white rounded-lg hover:bg-[#0084ff] cursor-pointer"
                 >
-                  Xóa tìm kiếm
+                  Clear search
                 </Button>
               )}
             </motion.div>
@@ -600,7 +615,7 @@ const AdminTraditionalPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Check in</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn check in khách hàng
+              Are you sure you want to check in customer
               <br />{" "}
               <span className="font-semibold text-black">
                 {chosenCustomer?.name}
@@ -626,7 +641,7 @@ const AdminTraditionalPage = () => {
               disabled={checkInMutation.isPending}
               className="cursor-pointer"
             >
-              Hủy
+              Cancel
             </AlertDialogCancel>
             <Button
               onClick={() =>
@@ -639,12 +654,12 @@ const AdminTraditionalPage = () => {
               {checkInMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Đang check in...
+                  Checking in...
                 </>
               ) : (
                 <>
                   <UserCheck className="w-4 h-4" />
-                  Xác nhận
+                  Confirm
                 </>
               )}
             </Button>

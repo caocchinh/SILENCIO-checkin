@@ -40,9 +40,14 @@ export const ActivityTimer = () => {
   return (
     <div className="flex items-center justify-center gap-2 absolute top-0 right-0">
       <span
-        className={cn("text-sm", timeSinceLastActivity >= PIN_VERIFICATION_INTERVAL * 0.5 ? "text-red-500" : "text-yellow-500")}
+        className={cn(
+          "text-sm",
+          timeSinceLastActivity >= PIN_VERIFICATION_INTERVAL * 0.5
+            ? "text-red-500"
+            : "text-yellow-500"
+        )}
       >
-        Hoạt động cuối: {minutes}:{seconds.toString().padStart(2, "0")} trước
+        Last activity: {minutes}:{seconds.toString().padStart(2, "0")} ago
       </span>
     </div>
   );

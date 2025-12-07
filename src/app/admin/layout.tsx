@@ -56,7 +56,7 @@ const AdminContent = async ({ children }: { children: React.ReactNode }) => {
               <div className="flex w-full sm:w-max flex-col items-start justify-center gap-0">
                 {" "}
                 <h1 className="w-full font-semibold text-3xl text-[#0084ff]">
-                  Hệ thống check in
+                  Check-in System
                 </h1>
                 <h3 className="text-gray-500 text-sm">{session.user.email}</h3>
               </div>

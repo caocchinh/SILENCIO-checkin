@@ -32,7 +32,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ERROR_CODES, getErrorMessage } from "@/constants/errors";
-import { EMAIL_HAUNTED_HOUSE_TICKET_INFO, TICKET_IMAGE } from "@/constants/constants";
+import {
+  EMAIL_HAUNTED_HOUSE_TICKET_INFO,
+  TICKET_IMAGE,
+} from "@/constants/constants";
 import { CustomerInfo } from "@/constants/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,17 +82,18 @@ const AdminOnlinePage = () => {
     useState(false);
   const isCheckInConfirmDialogOpenRef = useRef(isCheckInConfirmDialogOpen);
   const [isMounted, setIsMounted] = useState(false);
-  const [customerResponse, setCustomerResponse] = useState<CustomerInfo | null>(null);
+  const [customerResponse, setCustomerResponse] = useState<CustomerInfo | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-
-   // Mutation for checking in user via Ably
+  // Mutation for checking in user via Ably
   const checkInMutation = useMutation({
     mutationFn: async (customerId: string) => {
       const response = await ablyCheckInCustomer(customerId);
       if (response.success) {
-        return ;
+        return;
       } else {
         throw new Error(response.code || "unknown-error");
       }
@@ -143,10 +147,14 @@ const AdminOnlinePage = () => {
         }
         // Update local customer state if it matches
         if (message.data.studentId === customerResponse?.studentId) {
-          setCustomerResponse((prev) => prev ? ({
-            ...prev,
-            hasCheckedIn: true,
-          }) : null);
+          setCustomerResponse((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  hasCheckedIn: true,
+                }
+              : null
+          );
         }
         updateAllCustomersCheckInStatus(queryClient, message.data?.studentId);
       } else if (message.type === "refresh_all") {
@@ -154,7 +162,13 @@ const AdminOnlinePage = () => {
         queryClient.invalidateQueries({ queryKey: ["allCustomerInfo"] });
       }
     },
-    [customerResponse?.studentId, customerResponse?.hasCheckedIn, isLoading, checkInMutation.isPending, queryClient]
+    [
+      customerResponse?.studentId,
+      customerResponse?.hasCheckedIn,
+      isLoading,
+      checkInMutation.isPending,
+      queryClient,
+    ]
   );
 
   // Initialize unified Ably hook for all real-time communication
@@ -197,7 +211,7 @@ const AdminOnlinePage = () => {
       try {
         const response = await scanQRCode(scannedData);
         console.log("✅ QR scan response:", response);
-        
+
         if (response.success && response.data) {
           setCustomerResponse(response.data);
         } else {
@@ -215,8 +229,6 @@ const AdminOnlinePage = () => {
 
     performScan();
   }, [scannedData, key, scanQRCode, isAblyConnected, ablyConnectionState]);
-
- 
 
   // Load selected device from localStorage on mount or select the first device available
   useEffect(() => {
@@ -341,7 +353,7 @@ const AdminOnlinePage = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <User className="w-5 h-5" />
-              Thông tin khách hàng
+              Customer Information
             </h2>
             <TooltipProvider>
               <Tooltip>
@@ -359,10 +371,10 @@ const AdminOnlinePage = () => {
                 <TooltipContent>
                   <p>
                     {isAblyConnected
-                      ? "Đã kết nối thời gian thực"
+                      ? "Connected in real-time"
                       : ablyConnectionState === "connecting"
-                      ? "Đang kết nối..."
-                      : "Mất kết nối"}
+                      ? "Connecting..."
+                      : "Disconnected"}
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -400,7 +412,7 @@ const AdminOnlinePage = () => {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.1 }}
                   >
-                    Không có mã QR
+                    No QR code yet!
                   </motion.p>
                   <motion.p
                     className="text-sm text-slate-400 mt-1"
@@ -408,7 +420,8 @@ const AdminOnlinePage = () => {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
                   >
-                    Hãy dùng camera để quét mã QR từ điện thoại của khách
+                    Please use your phone to scan the QR code from the
+                    customer&apos;s phone
                   </motion.p>
                 </motion.div>
               ) : isLoading ? (
@@ -624,26 +637,30 @@ const AdminOnlinePage = () => {
                       </div>
 
                       <div className="flex items-start gap-1 flex-col">
-                       <div className="flex items-center gap-2">
-                         <GhostIcon className="w-5 h-5 text-slate-600 mt-0.5" />
-                        <div className="flex-1">
-                          <p className="text-xs text-slate-500 font-medium">
-                            Nhà ma
-                          </p>
-                          <p className="text-base font-semibold text-slate-900">
-                            {customerResponse.hauntedHouseName
-                              ? customerResponse.hauntedHouseName
-                              : "Không có"}
-                          </p>
+                        <div className="flex items-center gap-2">
+                          <GhostIcon className="w-5 h-5 text-slate-600 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-xs text-slate-500 font-medium">
+                              Nhà ma
+                            </p>
+                            <p className="text-base font-semibold text-slate-900">
+                              {customerResponse.hauntedHouseName
+                                ? customerResponse.hauntedHouseName
+                                : "Không có"}
+                            </p>
+                          </div>
                         </div>
-                       </div>
-                       {customerResponse.hauntedHouseName && (
-                        <img
-                          src={EMAIL_HAUNTED_HOUSE_TICKET_INFO[customerResponse.hauntedHouseName].ticketImageUrl}
-                          alt={customerResponse.hauntedHouseName}
-                          className="rounded-sm"
-                        />
-                      )}
+                        {customerResponse.hauntedHouseName && (
+                          <img
+                            src={
+                              EMAIL_HAUNTED_HOUSE_TICKET_INFO[
+                                customerResponse.hauntedHouseName
+                              ].ticketImageUrl
+                            }
+                            alt={customerResponse.hauntedHouseName}
+                            className="rounded-sm"
+                          />
+                        )}
                       </div>
 
                       <div className="flex items-start gap-3">
@@ -672,7 +689,9 @@ const AdminOnlinePage = () => {
                               {customerResponse.queueStartTime
                                 ? new Date(
                                     customerResponse.queueStartTime
-                                  ).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
+                                  ).toLocaleString("vi-VN", {
+                                    timeZone: "Asia/Ho_Chi_Minh",
+                                  })
                                 : "Không có"}
                             </p>
                           </div>
@@ -688,7 +707,9 @@ const AdminOnlinePage = () => {
                               {customerResponse.queueEndTime
                                 ? new Date(
                                     customerResponse.queueEndTime
-                                  ).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
+                                  ).toLocaleString("vi-VN", {
+                                    timeZone: "Asia/Ho_Chi_Minh",
+                                  })
                                 : "Không có"}
                             </p>
                           </div>
@@ -703,7 +724,9 @@ const AdminOnlinePage = () => {
                         <AlertDialogTrigger asChild>
                           <Button
                             className="w-full -mt-2 cursor-pointer"
-                            disabled={checkInMutation.isPending || !isAblyConnected}
+                            disabled={
+                              checkInMutation.isPending || !isAblyConnected
+                            }
                           >
                             {checkInMutation.isPending ? (
                               "Đang check in..."

@@ -17,7 +17,7 @@ export const LockButton: React.FC = () => {
       className="cursor-pointer flex-1 sm:w-max"
     >
       <Lock className="h-4 w-4" />
-      Khóa
+      Lock
     </Button>
   );
 };
