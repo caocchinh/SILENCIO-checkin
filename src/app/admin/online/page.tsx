@@ -324,7 +324,7 @@ const AdminOnlinePage = () => {
                       lastKeyUpdateRef.current = now;
                     }
                   }}
-                  allowMultiple={true}
+                  allowMultiple={false}
                   scanDelay={0}
                   constraints={{
                     ...(selectedDevice && { deviceId: selectedDevice }),
@@ -501,9 +501,9 @@ const AdminOnlinePage = () => {
                         >
                           {customerResponse.hasCheckedIn
                             ? isCustomerAlreadyCheckedInError
-                              ? "Đã check in trước đó"
-                              : "Đã check in"
-                            : "Đang chờ check in"}
+                              ? "Already checked-in before"
+                              : "Checked-in"
+                            : "Waiting for check-in"}
                         </p>
                         <p
                           className={`text-xs ${
@@ -516,9 +516,9 @@ const AdminOnlinePage = () => {
                         >
                           {customerResponse.hasCheckedIn
                             ? isCustomerAlreadyCheckedInError
-                              ? "Vui lòng không đeo vòng tay cho khách này"
+                              ? "Please do not wear a bracelet for this customer"
                               : null
-                            : "Vui lòng kiểm tra lại thông tin khách hàng"}
+                            : "Please check the customer's information"}
                         </p>
                       </div>
                     </div>
@@ -532,7 +532,7 @@ const AdminOnlinePage = () => {
                     transition={{ delay: 0.2 }}
                   >
                     <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide">
-                      Thông tin cá nhân
+                      Personal Information
                     </h3>
 
                     <motion.div
@@ -547,7 +547,7 @@ const AdminOnlinePage = () => {
                           <User className="w-5 h-5 text-slate-600 mt-0.5" />
                           <div className="flex-1">
                             <p className="text-xs text-slate-500 font-medium">
-                              Họ và tên
+                              Name
                             </p>
                             <p className="text-base font-semibold text-slate-900 whitespace-pre-wrap wrap-anywhere max-w-[200px]">
                               {customerResponse.name}
@@ -573,7 +573,7 @@ const AdminOnlinePage = () => {
 
                           <div className="flex-1">
                             <p className="text-xs text-slate-500 font-medium">
-                              Mã số HS
+                              Student ID
                             </p>
                             <p className="text-base font-semibold text-slate-900">
                               {customerResponse.studentId}
@@ -585,7 +585,7 @@ const AdminOnlinePage = () => {
                           <Home className="w-5 h-5 text-slate-600 mt-0.5" />
                           <div className="flex-1">
                             <p className="text-xs text-slate-500 font-medium">
-                              Lớp
+                              Class
                             </p>
                             <p className="text-base font-semibold text-slate-900">
                               {customerResponse.homeroom}
@@ -604,7 +604,7 @@ const AdminOnlinePage = () => {
                     transition={{ delay: 0.3 }}
                   >
                     <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide">
-                      Thông tin vé & nhà ma
+                      Ticket & Haunted House Information
                     </h3>
 
                     <motion.div
@@ -618,7 +618,7 @@ const AdminOnlinePage = () => {
                           <Ticket className="w-5 h-5 text-slate-600 mt-0.5" />
                           <div className="flex-1">
                             <p className="text-xs text-slate-500 font-medium">
-                              Hạng vé
+                              Ticket Type
                             </p>
                             <p className="text-base font-semibold text-slate-900">
                               {customerResponse.ticketType}
@@ -641,7 +641,7 @@ const AdminOnlinePage = () => {
                           <GhostIcon className="w-5 h-5 text-slate-600 mt-0.5" />
                           <div className="flex-1">
                             <p className="text-xs text-slate-500 font-medium">
-                              Nhà ma
+                              Haunted House
                             </p>
                             <p className="text-base font-semibold text-slate-900">
                               {customerResponse.hauntedHouseName
@@ -667,7 +667,7 @@ const AdminOnlinePage = () => {
                         <ListOrdered className="w-5 h-5 text-slate-600 mt-0.5" />
                         <div className="flex-1">
                           <p className="text-xs text-slate-500 font-medium">
-                            Lượt đi nhà ma
+                            Haunted House Queue Number
                           </p>
                           <p className="text-2xl font-bold text-[#0084ff]">
                             #
@@ -683,7 +683,7 @@ const AdminOnlinePage = () => {
                           <Clock className="w-4 h-4 text-slate-500 mt-0.5" />
                           <div className="flex-1">
                             <p className="text-xs text-slate-500 font-medium">
-                              Nhà ma bắt đầu lúc:
+                              Haunted House Start Time:
                             </p>
                             <p className="text-sm font-medium text-slate-700">
                               {customerResponse.queueStartTime
@@ -692,7 +692,7 @@ const AdminOnlinePage = () => {
                                   ).toLocaleString("vi-VN", {
                                     timeZone: "Asia/Ho_Chi_Minh",
                                   })
-                                : "Không có"}
+                                : "None"}
                             </p>
                           </div>
                         </div>
@@ -701,7 +701,7 @@ const AdminOnlinePage = () => {
                           <Clock className="w-4 h-4 text-slate-500 mt-0.5" />
                           <div className="flex-1">
                             <p className="text-xs text-slate-500 font-medium">
-                              Nhà ma kết thúc lúc:
+                              Haunted House End Time:
                             </p>
                             <p className="text-sm font-medium text-slate-700">
                               {customerResponse.queueEndTime
@@ -710,7 +710,7 @@ const AdminOnlinePage = () => {
                                   ).toLocaleString("vi-VN", {
                                     timeZone: "Asia/Ho_Chi_Minh",
                                   })
-                                : "Không có"}
+                                : "None"}
                             </p>
                           </div>
                         </div>
@@ -732,7 +732,7 @@ const AdminOnlinePage = () => {
                               "Đang check in..."
                             ) : !isAblyConnected ? (
                               <>
-                                Không có kết nối{" "}
+                                No connection{" "}
                                 <WifiOff className=" animate-pulse" />
                               </>
                             ) : (
@@ -745,10 +745,10 @@ const AdminOnlinePage = () => {
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>
-                              Xác nhận check in
+                              Confirm check in
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Bạn có chắc chắn muốn check in cho khách hàng:
+                              Are you sure you want to check in for customer:
                               <br /> <strong>
                                 {customerResponse.name}
                               </strong> - {customerResponse.studentId}?
@@ -759,7 +759,7 @@ const AdminOnlinePage = () => {
                               className="cursor-pointer"
                               disabled={checkInMutation.isPending}
                             >
-                              Hủy
+                              Cancel
                             </AlertDialogCancel>
                             <Button
                               className="cursor-pointer"
@@ -774,12 +774,12 @@ const AdminOnlinePage = () => {
                             >
                               {!isAblyConnected ? (
                                 <>
-                                  Không có kết nối{" "}
+                                  No connection{" "}
                                   <WifiOff className=" animate-pulse" />
                                 </>
                               ) : (
                                 <>
-                                  Xác nhận{" "}
+                                  Confirm{" "}
                                   {checkInMutation.isPending && (
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                   )}

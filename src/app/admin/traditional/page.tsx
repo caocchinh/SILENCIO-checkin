@@ -218,12 +218,12 @@ const AdminTraditionalPage = () => {
         ? new Date(customer.queueStartTime).toLocaleString("vi-VN", {
             timeZone: "Asia/Ho_Chi_Minh",
           })
-        : "Không có";
+        : "None";
       const endTime = customer.queueEndTime
         ? new Date(customer.queueEndTime).toLocaleString("vi-VN", {
             timeZone: "Asia/Ho_Chi_Minh",
           })
-        : "Không có";
+        : "None";
       const ticketImage =
         TICKET_IMAGE[customer.ticketType as keyof typeof TICKET_IMAGE];
 
@@ -413,11 +413,11 @@ const AdminTraditionalPage = () => {
                                     </div>
                                     {customer.hasCheckedIn ? (
                                       <p className="px-2 py-1 bg-green-100 w-max text-green-800 rounded-full text-md font-semibold">
-                                        ✓ Đã check-in
+                                        ✓ Checked-in
                                       </p>
                                     ) : (
                                       <p className="px-2 py-1 bg-amber-100 w-max text-amber-800 rounded-full text-md font-semibold">
-                                        ⏳ Chưa check-in
+                                        ⏳ Have not check-in
                                       </p>
                                     )}
                                   </div>
@@ -533,7 +533,7 @@ const AdminTraditionalPage = () => {
                                             #
                                             {customer.queueNumber
                                               ? customer.queueNumber
-                                              : "Không có"}
+                                              : "None"}
                                           </span>
                                         </div>
                                       </div>
