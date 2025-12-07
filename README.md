@@ -44,6 +44,17 @@ The system comprises two main components:
 
 > **"473 students showed up and this system worked flawlessly."**
 
+### ⚠️ The Challenge: Why this system exists?
+
+High-stakes events with limited timeframes are unforgiving. Without this dedicated infrastructure, the event operations would face critical failure points:
+
+- **The "Fake Ticket" Risk**: With simple paper tickets or static lists, preventing double-entry or fake tickets is a logistical nightmare.
+  - _Solution_: **Race-Condition Proof Verification** instantly locks the ticket record in the database upon scan. This blocks **fraudulent check-in attempts** immediately, ensuring every entry is unique.
+- **The Efficiency Bottleneck**: A slow traditional check-in process using Spreadsheet lookup for 400+ students leads to dangerous overcrowding and delays.
+  - _Solution_: **High-Performance WebSocket Worker** processes scans in real-time, enabling **faster check-in times** (under 20s per student) to keep the line moving smoothly.
+- **The "Wrong Bracelet" Confusion**: Staff need to quickly identify which bracelet to give each attendee in a chaotic environment.
+  - _Solution_: **Distinct Visual Cues** provides large, color-coded instructions on screen, offering **good visuals for staff to collect the right bracelet** without hesitation.
+
 ## ✨ Features
 
 ### 🎫 Fast Check-in System
