@@ -46,17 +46,12 @@ The system comprises two main components:
 - **Real-time Feedback**: Immediate visual and audio feedback via WebSocket connection.
 - **Race Condition Prevention**: Database-level locking to prevent double entry.
 
+<img src="https://github.com/caocchinh/VTEAM-ticket-manager/blob/master/public/assets/github/proof.webp?raw=true" alt="400 students lined up and this system worked flawlessly" style="border-radius: 10px; margin-bottom: 10px; margin-top: 10px; width: 100%;" />
+
 ### 🛡️ Security & Access Control
 
 - **Staff Verification**: PIN-based authentication for sensitive staff actions.
 - **Role-Based Access**: Strict separation of student and staff capabilities.
-
-### 👻 Haunted House Virtual Queue
-
-- **Fair Queuing**: Students join a virtual line for attractions, reducing physical crowding.
-- **Group Reservations**: Support for group codes, allowing friends to queue together.
-- **Smart Estimation**: Real-time updates on queue position and estimated wait times.
-- **Queue Spots**: Management of individual spots and "Fast Pass" priority handling.
 
 ### ⚡ Architecture & Performance
 
