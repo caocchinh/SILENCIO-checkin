@@ -64,7 +64,6 @@ High-stakes events with limited timeframes are unforgiving. Without this dedicat
 - **Race Condition Prevention**: Database-level locking to prevent double entry.
 
 <img src="https://github.com/caocchinh/SILENCIO-checkin/blob/master/public/assets/github/admin1.webp?raw=true" alt="400 students lined up and this system worked flawlessly" style="border-radius: 10px; margin-bottom: 10px; margin-top: 10px; width: 100%;" />
-<img src="https://github.com/caocchinh/SILENCIO-checkin/blob/master/public/assets/github/admin2.webp?raw=true" alt="400 students lined up and this system worked flawlessly" style="border-radius: 10px; margin-bottom: 10px; margin-top: 10px; width: 100%;" />
 <img src="https://github.com/caocchinh/SILENCIO-checkin/blob/master/public/assets/github/admin3.webp?raw=true" alt="400 students lined up and this system worked flawlessly" style="border-radius: 10px; margin-bottom: 10px; margin-top: 10px; width: 100%;" />
 
 ### 🛡️ Security & Access Control
