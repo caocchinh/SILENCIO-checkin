@@ -48,7 +48,7 @@ export const ERROR_MESSAGES = {
   [ERROR_CODES.ALREADY_EXISTS]: "Tài nguyên đã tồn tại",
   [ERROR_CODES.CUSTOMER_ALREADY_CHECKED_IN]: "Khách hàng đã check in rồi",
   [ERROR_CODES.PIN_REQUIRED]: "Vui lòng nhập mã PIN",
-  [ERROR_CODES.PIN_INVALID]: "Mã PIN không đúng",
+  [ERROR_CODES.PIN_INVALID]: "Wrong PIN",
   [ERROR_CODES.PIN_VERIFICATION_FAILED]: "Xác thực PIN thất bại",
 } as const;
 

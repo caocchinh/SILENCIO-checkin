@@ -40,6 +40,12 @@ The system comprises two main components:
 
 ## 📸 Footage of Silencio Check-in System in action
 
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=b8yXIbeToPo" target="_blank">
+    <img src="https://img.youtube.com/vi/b8yXIbeToPo/maxresdefault.jpg" alt="Watch the Demo Video" width="100%" style="border-radius: 10px; margin-bottom: 10px;" />
+  </a>
+</div>
+
 <img src="https://github.com/caocchinh/SILENCIO-checkin/blob/master/public/assets/github/proof.webp?raw=true" alt="400 students lined up and this system worked flawlessly" style="border-radius: 10px; margin-bottom: 10px; margin-top: 10px; width: 100%;" />
 
 > **"473 students showed up and this system worked flawlessly."**

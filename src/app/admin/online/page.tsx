@@ -106,8 +106,8 @@ const AdminOnlinePage = () => {
         scannedData + key,
       ]);
       successToast({
-        message: "Thành công",
-        description: "Khách hàng đã được check in thành công",
+        message: "Success!",
+        description: "Customer checked in successfully!",
       });
     },
     onError: (error) => {
@@ -448,7 +448,7 @@ const AdminOnlinePage = () => {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.1 }}
                   >
-                    Đang lấy thông tin...
+                    Fetching info...
                   </motion.p>
                 </motion.div>
               ) : customerResponse ? (
@@ -646,7 +646,7 @@ const AdminOnlinePage = () => {
                             <p className="text-base font-semibold text-slate-900">
                               {customerResponse.hauntedHouseName
                                 ? customerResponse.hauntedHouseName
-                                : "Không có"}
+                                : "Not available"}
                             </p>
                           </div>
                         </div>
@@ -673,7 +673,7 @@ const AdminOnlinePage = () => {
                             #
                             {customerResponse.queueNumber
                               ? customerResponse.queueNumber
-                              : "Không có"}
+                              : "Not available"}
                           </p>
                         </div>
                       </div>
@@ -729,7 +729,7 @@ const AdminOnlinePage = () => {
                             }
                           >
                             {checkInMutation.isPending ? (
-                              "Đang check in..."
+                              "Checking in..."
                             ) : !isAblyConnected ? (
                               <>
                                 No connection{" "}

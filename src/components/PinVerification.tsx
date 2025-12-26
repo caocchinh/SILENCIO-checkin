@@ -76,7 +76,7 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
       <div className="flex h-[calc(100vh-40px)] w-full items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-          <p className="text-gray-600">Đang xác thực</p>
+          <p className="text-gray-600">Verifying...</p>
           {contextError && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -172,7 +172,7 @@ export const PinVerification: React.FC<PinVerificationProps> = ({
           {verifyPinMutation.isPending && (
             <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
-              <span>Đang xác thực PIN...</span>
+              <span>Verifying PIN...</span>
             </div>
           )}
 
